@@ -1,0 +1,417 @@
+-- =====================================================================
+--  Database: group_collab_app (full schema, MySQL 8.0+)
+--  Purpose : Student Group Collaboration Web App
+--  Notes   : Includes Kanban ordering, DM uniqueness, meeting action items,
+--            file metadata, JSON validity checks, and small FK nullability fixes.
+-- =====================================================================
+
+-- Session & safety
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- Drops (views first, then tables in reverse dependency)
+DROP VIEW IF EXISTS v_contributions_monthly;
+
+DROP TABLE IF EXISTS poll_votes;
+DROP TABLE IF EXISTS polls;
+DROP TABLE IF EXISTS reminders;
+DROP TABLE IF EXISTS messages;
+DROP TABLE IF EXISTS channels;
+DROP TABLE IF EXISTS meeting_moods;
+DROP TABLE IF EXISTS meeting_action_items;
+DROP TABLE IF EXISTS meetings;
+DROP TABLE IF EXISTS rubric_scores;
+DROP TABLE IF EXISTS rubric_criteria;
+DROP TABLE IF EXISTS rubrics;
+DROP TABLE IF EXISTS contributions;
+DROP TABLE IF EXISTS task_assignees;
+DROP TABLE IF EXISTS tasks;
+DROP TABLE IF EXISTS board_columns;
+DROP TABLE IF EXISTS boards;
+DROP TABLE IF EXISTS files;
+DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS group_invites;
+DROP TABLE IF EXISTS group_members;
+DROP TABLE IF EXISTS `groups`;
+DROP TABLE IF EXISTS email_verifications;
+DROP TABLE IF EXISTS user_profiles;
+DROP TABLE IF EXISTS users;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- =====================================================================
+-- Core Users & Auth
+-- =====================================================================
+CREATE TABLE users (
+  id             BIGINT PRIMARY KEY AUTO_INCREMENT,
+  email          VARCHAR(255) NOT NULL UNIQUE,
+  password_hash  VARCHAR(255) NOT NULL,
+  name           VARCHAR(120) NOT NULL,
+  display_name   VARCHAR(120) NULL,
+  email_verified TINYINT(1) NOT NULL DEFAULT 0,
+  created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at     DATETIME NULL ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX idx_users_name ON users (name);
+
+CREATE TABLE user_profiles (
+  user_id       BIGINT PRIMARY KEY,
+  major         VARCHAR(120),
+  skills        JSON,           -- e.g., ["PHP","MySQL","UI/UX"]
+  interests     JSON,           -- e.g., ["AI","Mobile"]
+  strengths     TEXT,
+  weaknesses    TEXT,
+  typical_roles JSON,           -- e.g., ["Leader","Backend","QA"]
+  updated_at    DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_user_profiles_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT chk_user_profiles_skills    CHECK (skills IS NULL OR JSON_VALID(skills)),
+  CONSTRAINT chk_user_profiles_interests CHECK (interests IS NULL OR JSON_VALID(interests)),
+  CONSTRAINT chk_user_profiles_roles     CHECK (typical_roles IS NULL OR JSON_VALID(typical_roles))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE email_verifications (
+  id          BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id     BIGINT NOT NULL,
+  token       CHAR(64) NOT NULL UNIQUE,
+  expires_at  DATETIME NOT NULL,
+  used_at     DATETIME NULL,
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_email_verif_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- =====================================================================
+-- Groups & Memberships & Invites
+-- =====================================================================
+CREATE TABLE `groups` (
+  id          BIGINT PRIMARY KEY AUTO_INCREMENT,
+  name        VARCHAR(200) NOT NULL,
+  description TEXT,
+  owner_id    BIGINT NOT NULL,
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at  DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_groups_owner FOREIGN KEY (owner_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE group_members (
+  group_id  BIGINT NOT NULL,
+  user_id   BIGINT NOT NULL,
+  role      ENUM('LEAD','MEMBER') NOT NULL DEFAULT 'MEMBER',
+  joined_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (group_id, user_id),
+  CONSTRAINT fk_group_members_group FOREIGN KEY (group_id) REFERENCES `groups`(id) ON DELETE CASCADE,
+  CONSTRAINT fk_group_members_user  FOREIGN KEY (user_id)  REFERENCES users(id)   ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Invite via Email or by selecting existing user by Name
+CREATE TABLE group_invites (
+  id              BIGINT PRIMARY KEY AUTO_INCREMENT,
+  group_id        BIGINT NOT NULL,
+  inviter_id      BIGINT NULL,               -- must be NULL-able because of ON DELETE SET NULL
+  invitee_email   VARCHAR(255) NULL,
+  invitee_user_id BIGINT NULL,
+  token           CHAR(64) NOT NULL UNIQUE,
+  role            ENUM('LEAD','MEMBER') NOT NULL DEFAULT 'MEMBER',
+  status          ENUM('PENDING','ACCEPTED','DECLINED','EXPIRED','REVOKED') NOT NULL DEFAULT 'PENDING',
+  created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  acted_at        DATETIME NULL,
+  expires_at      DATETIME NOT NULL,
+  CONSTRAINT fk_group_inv_group   FOREIGN KEY (group_id)        REFERENCES `groups`(id) ON DELETE CASCADE,
+  CONSTRAINT fk_group_inv_inviter FOREIGN KEY (inviter_id)      REFERENCES users(id)     ON DELETE SET NULL,
+  CONSTRAINT fk_group_inv_invitee FOREIGN KEY (invitee_user_id) REFERENCES users(id)     ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- In-app notifications (for name-based invites, etc.)
+CREATE TABLE notifications (
+  id         BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id    BIGINT NOT NULL,
+  type       VARCHAR(50) NOT NULL, -- e.g., GROUP_INVITE
+  payload    JSON NOT NULL,        -- e.g., {"group_id":1,"group_name":"KTPM","invite_id":22}
+  is_read    TINYINT(1) NOT NULL DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- =====================================================================
+-- Kanban Boards, Tasks, Contributions
+-- =====================================================================
+CREATE TABLE boards (
+  id         BIGINT PRIMARY KEY AUTO_INCREMENT,
+  group_id   BIGINT NOT NULL,
+  name       VARCHAR(200) NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_boards_group FOREIGN KEY (group_id) REFERENCES `groups`(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE board_columns (
+  id        BIGINT PRIMARY KEY AUTO_INCREMENT,
+  board_id  BIGINT NOT NULL,
+  name      VARCHAR(100) NOT NULL,   -- Backlog, In Progress, Review, Done
+  position  INT NOT NULL,
+  CONSTRAINT fk_columns_board FOREIGN KEY (board_id) REFERENCES boards(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX idx_board_columns_board ON board_columns (board_id, position);
+
+CREATE TABLE tasks (
+  id             BIGINT PRIMARY KEY AUTO_INCREMENT,
+  board_id       BIGINT NOT NULL,
+  column_id      BIGINT NOT NULL,
+  position       INT NOT NULL DEFAULT 0,      -- order inside a column for DnD
+  title          VARCHAR(200) NOT NULL,
+  description    TEXT,
+  priority       ENUM('LOW','MEDIUM','HIGH','CRITICAL') NOT NULL DEFAULT 'LOW',
+  estimate_hours DECIMAL(5,2) NULL,
+  due_date       DATE NULL,
+  labels         JSON NULL,
+  created_by     BIGINT NULL,
+  created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  done_at        DATETIME NULL,
+  updated_at     DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_tasks_board   FOREIGN KEY (board_id)  REFERENCES boards(id)        ON DELETE CASCADE,
+  CONSTRAINT fk_tasks_column  FOREIGN KEY (column_id) REFERENCES board_columns(id) ON DELETE RESTRICT,
+  CONSTRAINT fk_tasks_creator FOREIGN KEY (created_by) REFERENCES users(id)        ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX idx_tasks_board_col ON tasks (board_id, column_id);
+CREATE INDEX idx_tasks_board_col_pos ON tasks (board_id, column_id, position);
+CREATE INDEX idx_tasks_due ON tasks (due_date);
+CREATE INDEX idx_tasks_priority ON tasks (priority);
+
+CREATE TABLE task_assignees (
+  task_id BIGINT NOT NULL,
+  user_id BIGINT NOT NULL,
+  PRIMARY KEY (task_id, user_id),
+  CONSTRAINT fk_task_assignees_task FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+  CONSTRAINT fk_task_assignees_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Contribution points logged when a task becomes Done
+CREATE TABLE contributions (
+  id        BIGINT PRIMARY KEY AUTO_INCREMENT,
+  group_id  BIGINT NOT NULL,
+  task_id   BIGINT NOT NULL,
+  user_id   BIGINT NOT NULL,
+  points    DECIMAL(8,2) NOT NULL,
+  logged_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_contrib_group FOREIGN KEY (group_id) REFERENCES `groups`(id) ON DELETE CASCADE,
+  CONSTRAINT fk_contrib_task  FOREIGN KEY (task_id)  REFERENCES tasks(id) ON DELETE CASCADE,
+  CONSTRAINT fk_contrib_user  FOREIGN KEY (user_id)  REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- View: monthly contributions by user
+CREATE OR REPLACE VIEW v_contributions_monthly AS
+SELECT
+  c.group_id,
+  c.user_id,
+  DATE_FORMAT(c.logged_at, '%Y-%m') AS ym,
+  SUM(c.points) AS total_points
+FROM contributions c
+GROUP BY c.group_id, c.user_id, ym;
+
+-- =====================================================================
+-- Rubric (criteria & scoring)
+-- =====================================================================
+CREATE TABLE rubrics (
+  id          BIGINT PRIMARY KEY AUTO_INCREMENT,
+  group_id    BIGINT NOT NULL,
+  name        VARCHAR(200) NOT NULL,
+  description TEXT NULL,
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_by  BIGINT NULL,
+  CONSTRAINT fk_rubrics_group   FOREIGN KEY (group_id) REFERENCES `groups`(id) ON DELETE CASCADE,
+  CONSTRAINT fk_rubrics_creator FOREIGN KEY (created_by) REFERENCES users(id)   ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE rubric_criteria (
+  id         BIGINT PRIMARY KEY AUTO_INCREMENT,
+  rubric_id  BIGINT NOT NULL,
+  criterion  VARCHAR(200) NOT NULL,
+  weight_pct INT NOT NULL,             -- e.g., 40,20,20,10,10
+  max_level  INT NOT NULL DEFAULT 4,   -- 1..4
+  description TEXT NULL,
+  position   INT NOT NULL DEFAULT 1,
+  CONSTRAINT fk_rubric_criteria_rubric FOREIGN KEY (rubric_id) REFERENCES rubrics(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX idx_rubric_criteria_rubric ON rubric_criteria (rubric_id, position);
+
+CREATE TABLE rubric_scores (
+  id           BIGINT PRIMARY KEY AUTO_INCREMENT,
+  rubric_id    BIGINT NOT NULL,
+  target_type  ENUM('USER','DELIVERABLE') NOT NULL,
+  target_id    BIGINT NOT NULL,     -- user_id or deliverable_id
+  scored_by    BIGINT NULL,         -- must be NULL-able due to ON DELETE SET NULL
+  scores       JSON NOT NULL,       -- {"criterion_id": level(1..4), ...}
+  total_score  DECIMAL(6,2) NULL,   -- computed & stored by app (0..100)
+  rubric_note  TEXT NULL,
+  scored_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_rubric_scores_rubric FOREIGN KEY (rubric_id) REFERENCES rubrics(id) ON DELETE CASCADE,
+  CONSTRAINT fk_rubric_scores_scorer FOREIGN KEY (scored_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX idx_rubric_scores_target ON rubric_scores (rubric_id, target_type, target_id, scored_at);
+
+-- =====================================================================
+-- Meetings, action items, moods, summaries
+-- =====================================================================
+CREATE TABLE meetings (
+  id           BIGINT PRIMARY KEY AUTO_INCREMENT,
+  group_id     BIGINT NOT NULL,
+  title        VARCHAR(200) NOT NULL,
+  agenda       JSON NULL,         -- ["Part 1", "Part 2", ...]
+  start_at     DATETIME NULL,
+  duration_min INT NULL,
+  minutes      MEDIUMTEXT NULL,   -- meeting minutes text
+  summary      MEDIUMTEXT NULL,   -- AI-like summary (simulated)
+  created_by   BIGINT NULL,
+  created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_meetings_group   FOREIGN KEY (group_id) REFERENCES `groups`(id) ON DELETE CASCADE,
+  CONSTRAINT fk_meetings_creator FOREIGN KEY (created_by) REFERENCES users(id)    ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE meeting_action_items (
+  id          BIGINT PRIMARY KEY AUTO_INCREMENT,
+  meeting_id  BIGINT NOT NULL,
+  content     VARCHAR(500) NOT NULL,      -- what to do
+  assignee_id BIGINT NULL,                -- user responsible
+  due_at      DATETIME NULL,
+  status      ENUM('OPEN','IN_PROGRESS','DONE','CANCELLED') NOT NULL DEFAULT 'OPEN',
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at  DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_mai_meeting  FOREIGN KEY (meeting_id)  REFERENCES meetings(id) ON DELETE CASCADE,
+  CONSTRAINT fk_mai_assignee FOREIGN KEY (assignee_id) REFERENCES users(id)    ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX idx_mai_meeting_status ON meeting_action_items (meeting_id, status);
+
+CREATE TABLE meeting_moods (
+  id          BIGINT PRIMARY KEY AUTO_INCREMENT,
+  meeting_id  BIGINT NOT NULL,
+  user_id     BIGINT NOT NULL,
+  score       TINYINT NOT NULL,   -- 1..5
+  note        VARCHAR(200) NULL,
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_moods_meeting FOREIGN KEY (meeting_id) REFERENCES meetings(id) ON DELETE CASCADE,
+  CONSTRAINT fk_moods_user    FOREIGN KEY (user_id)    REFERENCES users(id)    ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- =====================================================================
+-- Chat (group channels & direct messages), polls, reminders
+-- =====================================================================
+CREATE TABLE channels (
+  id          BIGINT PRIMARY KEY AUTO_INCREMENT,
+  group_id    BIGINT NULL,                         -- null for DM channels
+  type        ENUM('GROUP','DM') NOT NULL,
+  name        VARCHAR(200) NULL,                   -- for GROUP channels
+  dm_user_a   BIGINT NULL,                         -- for DM: user A
+  dm_user_b   BIGINT NULL,                         -- for DM: user B
+  dm_user_min BIGINT AS (LEAST(dm_user_a, dm_user_b)) STORED,
+  dm_user_max BIGINT AS (GREATEST(dm_user_a, dm_user_b)) STORED,
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_channels_group FOREIGN KEY (group_id) REFERENCES `groups`(id) ON DELETE CASCADE,
+  CONSTRAINT fk_channels_dm_a  FOREIGN KEY (dm_user_a) REFERENCES users(id)     ON DELETE CASCADE,
+  CONSTRAINT fk_channels_dm_b  FOREIGN KEY (dm_user_b) REFERENCES users(id)     ON DELETE CASCADE,
+  CONSTRAINT chk_channels_shape CHECK (
+    (type = 'GROUP' AND group_id IS NOT NULL AND dm_user_a IS NULL AND dm_user_b IS NULL)
+    OR
+    (type = 'DM'    AND group_id IS NULL  AND dm_user_a IS NOT NULL AND dm_user_b IS NOT NULL)
+  )
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Unique DM per unordered pair
+CREATE UNIQUE INDEX ux_channels_dm_pair ON channels (type, dm_user_min, dm_user_max);
+
+CREATE TABLE messages (
+  id          BIGINT PRIMARY KEY AUTO_INCREMENT,
+  channel_id  BIGINT NOT NULL,
+  sender_id   BIGINT NOT NULL,
+  body        MEDIUMTEXT NULL,
+  emojis      JSON NULL,                      -- [{"user_id":1,"emoji":"👍"}]
+  attachments JSON NULL,                      -- [{"file_id":123}, ...]
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_messages_channel FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE CASCADE,
+  CONSTRAINT fk_messages_sender  FOREIGN KEY (sender_id)  REFERENCES users(id)    ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX idx_messages_channel_time ON messages (channel_id, created_at);
+
+CREATE TABLE polls (
+  id          BIGINT PRIMARY KEY AUTO_INCREMENT,
+  channel_id  BIGINT NOT NULL,
+  question    VARCHAR(255) NOT NULL,
+  options     JSON NOT NULL,                  -- ["A","B","C"]
+  multiple    TINYINT(1) NOT NULL DEFAULT 0,
+  ends_at     DATETIME NULL,
+  created_by  BIGINT NULL,
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_polls_channel FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE CASCADE,
+  CONSTRAINT fk_polls_creator FOREIGN KEY (created_by) REFERENCES users(id)     ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE poll_votes (
+  poll_id   BIGINT NOT NULL,
+  user_id   BIGINT NOT NULL,
+  choices   JSON NOT NULL,                     -- index(es) selected
+  voted_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (poll_id, user_id),
+  CONSTRAINT fk_poll_votes_poll FOREIGN KEY (poll_id) REFERENCES polls(id) ON DELETE CASCADE,
+  CONSTRAINT fk_poll_votes_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE reminders (
+  id                BIGINT PRIMARY KEY AUTO_INCREMENT,
+  group_id          BIGINT NULL,
+  title             VARCHAR(200) NOT NULL,
+  remind_at         DATETIME NOT NULL,
+  target_channel_id BIGINT NULL,
+  payload           JSON NULL,                 -- arbitrary metadata
+  created_by        BIGINT NULL,
+  created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_reminders_group   FOREIGN KEY (group_id)          REFERENCES `groups`(id)   ON DELETE CASCADE,
+  CONSTRAINT fk_reminders_channel FOREIGN KEY (target_channel_id) REFERENCES channels(id)   ON DELETE SET NULL,
+  CONSTRAINT fk_reminders_creator FOREIGN KEY (created_by)        REFERENCES users(id)      ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- =====================================================================
+-- Files (per group, linkable to tasks/meetings)
+-- =====================================================================
+CREATE TABLE files (
+  id           BIGINT PRIMARY KEY AUTO_INCREMENT,
+  group_id     BIGINT NOT NULL,
+  uploader_id  BIGINT NOT NULL,
+  path         VARCHAR(500) NOT NULL,
+  filename     VARCHAR(255) NOT NULL,
+  mime_type    VARCHAR(150) NULL,
+  size_bytes   BIGINT NULL,
+  checksum     CHAR(64) NULL,                  -- e.g., SHA-256
+  storage      ENUM('LOCAL','S3','GCS') NOT NULL DEFAULT 'LOCAL',
+  description  TEXT NULL,
+  task_id      BIGINT NULL,
+  meeting_id   BIGINT NULL,
+  version      INT NOT NULL DEFAULT 1,
+  uploaded_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_files_group    FOREIGN KEY (group_id)    REFERENCES `groups`(id)  ON DELETE CASCADE,
+  CONSTRAINT fk_files_uploader FOREIGN KEY (uploader_id) REFERENCES users(id)     ON DELETE SET NULL,
+  CONSTRAINT fk_files_task     FOREIGN KEY (task_id)     REFERENCES tasks(id)     ON DELETE SET NULL,
+  CONSTRAINT fk_files_meeting  FOREIGN KEY (meeting_id)  REFERENCES meetings(id)  ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX idx_files_group ON files (group_id, uploaded_at);
+
+-- =====================================================================
+-- Seed helpers (optional)
+-- =====================================================================
+-- Example insert for a default rubric (weights must sum 100)
+-- INSERT INTO rubrics (group_id, name, description, created_by)
+-- VALUES (1, 'Standard Rubric', 'Five weighted criteria', 1);
+-- INSERT INTO rubric_criteria (rubric_id, criterion, weight_pct, max_level, position) VALUES
+-- (1,'Task Completion',40,4,1),
+-- (1,'Deadline Adherence',20,4,2),
+-- (1,'Output Quality',20,4,3),
+-- (1,'Communication & Teamwork',10,4,4),
+-- (1,'Proactiveness & Creativity',10,4,5);
+
+-- =====================================================================
+-- Done
+-- =====================================================================

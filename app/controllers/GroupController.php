@@ -3,26 +3,31 @@
 
 require_once 'app/models/Group.php';
 require_once 'app/models/User.php';
-require_once 'app/models/Task.php'; // THÊM DÒNG NÀY
+require_once 'app/models/Task.php';
+require_once 'app/models/Chat.php';
+require_once 'app/models/Poll.php'; // THÊM DÒNG NÀY
 
 class GroupController {
     private $db;
     private $groupModel;
     private $userModel;
-    private $taskModel; // THÊM BIẾN NÀY
+    private $taskModel;
+    private $chatModel;
+    private $pollModel; // THÊM BIẾN NÀY
 
     public function __construct($db) {
         $this->db = $db;
         $this->groupModel = new Group($this->db);
         $this->userModel = new User($this->db);
-        $this->taskModel = new Task($this->db); // THÊM DÒNG NÀY
+        $this->taskModel = new Task($this->db);
+        $this->chatModel = new Chat($this->db);
+        $this->pollModel = new Poll($this->db); // THÊM DÒNG NÀY
     }
 
     // ... (Giữ nguyên các hàm: index, create, inviteMember, acceptInvitation, rejectInvitation) ...
     public function index() {
         if (!isset($_SESSION['user_id'])) {
-            header('Location: index.php?page=login');
-            exit;
+            header('Location: index.php?page=login'); exit;
         }
         $user_id = $_SESSION['user_id'];
         $groups = $this->groupModel->getGroupsByUserId($user_id);
@@ -31,8 +36,7 @@ class GroupController {
     }
     public function create() {
         if (!isset($_SESSION['user_id']) || $_SERVER['REQUEST_METHOD'] != 'POST') {
-            header('Location: index.php?page=login');
-            exit;
+            header('Location: index.php?page=login'); exit;
         }
         $group_name = strip_tags($_POST['group_name']);
         $group_description = strip_tags($_POST['group_description']);
@@ -46,13 +50,11 @@ class GroupController {
                 $_SESSION['flash_message'] = "Tạo nhóm thất bại. Vui lòng thử lại.";
             }
         }
-        header('Location: index.php?page=groups');
-        exit;
+        header('Location: index.php?page=groups'); exit;
     }
     public function inviteMember() {
         if (!isset($_SESSION['user_id']) || $_SERVER['REQUEST_METHOD'] != 'POST') {
-            header('Location: index.php?page=login');
-            exit;
+            header('Location: index.php?page=login'); exit;
         }
         $group_id = (int)$_POST['group_id'];
         $email_or_username = trim(strip_tags($_POST['email_or_username']));
@@ -82,13 +84,11 @@ class GroupController {
         } else {
             $_SESSION['flash_message'] = "Lỗi: Không thể gửi lời mời. Vui lòng thử lại.";
         }
-        header($redirect_url);
-        exit;
+        header($redirect_url); exit;
     }
     public function acceptInvitation() {
         if (!isset($_SESSION['user_id']) || $_SERVER['REQUEST_METHOD'] != 'POST') {
-            header('Location: index.php?page=login');
-            exit;
+            header('Location: index.php?page=login'); exit;
         }
         $invitation_id = (int)$_POST['invitation_id'];
         $group_id = (int)$_POST['group_id'];
@@ -98,13 +98,11 @@ class GroupController {
         } else {
             $_SESSION['flash_message'] = "Lỗi: Không thể chấp nhận lời mời.";
         }
-        header('Location: index.php?page=groups');
-        exit;
+        header('Location: index.php?page=groups'); exit;
     }
     public function rejectInvitation() {
         if (!isset($_SESSION['user_id']) || $_SERVER['REQUEST_METHOD'] != 'POST') {
-            header('Location: index.php?page=login');
-            exit;
+            header('Location: index.php?page=login'); exit;
         }
         $invitation_id = (int)$_POST['invitation_id'];
         if ($this->groupModel->rejectInvitation($invitation_id)) {
@@ -112,13 +110,12 @@ class GroupController {
         } else {
             $_SESSION['flash_message'] = "Lỗi: Không thể từ chối lời mời.";
         }
-        header('Location: index.php?page=groups');
-        exit;
+        header('Location: index.php?page=groups'); exit;
     }
 
     /**
      * CẬP NHẬT HÀM NÀY:
-     * Hiển thị trang chi tiết nhóm (gồm cả tasks và members)
+     * Hiển thị trang chi tiết (thêm logic tải polls)
      */
     public function show() {
         if (!isset($_SESSION['user_id'])) {
@@ -131,7 +128,6 @@ class GroupController {
             exit;
         }
         
-        // 1. Lấy thông tin nhóm
         $group = $this->groupModel->getGroupById($group_id);
         if (!$group) {
             $_SESSION['flash_message'] = "Không tìm thấy nhóm này.";
@@ -139,13 +135,22 @@ class GroupController {
             exit;
         }
         
-        // 2. LẤY DANH SÁCH TASK (MỚI)
         $tasks = $this->taskModel->getTasksByGroupId($group_id);
-
-        // 3. LẤY DANH SÁCH THÀNH VIÊN (MỚI)
         $members = $this->groupModel->getMembersByGroupId($group_id);
-
-        // 4. Tải View và truyền cả 3 biến
+        $messages = $this->chatModel->getMessagesByGroupId($group_id);
+        
+        // 5. LẤY POLLS (MỚI)
+        $polls = $this->pollModel->getPollsByGroupId($group_id);
+        
+        // 6. LẤY VOTE CỦA USER (MỚI)
+        $user_votes = [];
+        foreach ($polls as $poll) {
+            $user_vote = $this->pollModel->getUserVote($poll['poll_id'], $_SESSION['user_id']);
+            if ($user_vote) {
+                $user_votes[$poll['poll_id']] = $user_vote;
+            }
+        }
+        
         require 'app/views/group_details.php';
     }
 }
