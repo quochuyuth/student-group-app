@@ -3,8 +3,8 @@
 
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root'); // User mặc định của XAMPP
-define('DB_PASS', '');     // Password mặc định của XAMPP là rỗng
-define('DB_NAME', 'student_collab_db'); // Tên DB bạn đã tạo ở Bước 1
+define('DB_PASS', 'password123');     // Password mặc định của XAMPP là rỗng
+define('DB_NAME', 'student_group_management'); // Tên DB bạn đã tạo ở Bước 1
 
 try {
     $db = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME, DB_USER, DB_PASS);
