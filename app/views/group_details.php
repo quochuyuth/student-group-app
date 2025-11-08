@@ -4,7 +4,7 @@ if (!isset($_SESSION['user_id'])) {
     header('Location: index.php?page=login');
     exit;
 }
-// Các biến $group, $tasks, $members, $messages, $polls, $user_votes được truyền từ GroupController
+// Các biến ($group, $tasks, $members, $messages, $polls, $user_votes, $chat_files)
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -12,9 +12,7 @@ if (!isset($_SESSION['user_id'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chi tiết nhóm: <?php echo htmlspecialchars($group['group_name']); ?></title>
-
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
     <link rel="stylesheet" href="public/css/group_details.css">
 </head>
 <body>
@@ -28,7 +26,6 @@ if (!isset($_SESSION['user_id'])) {
         <nav class="topnav">
             <a href="index.php?page=dashboard">🏠 Trang chủ</a>
             <a href="index.php?page=profile">👤 Hồ sơ</a>
-            <a href="index.php?page=groups">👥 Nhóm</a>
             <a href="index.php?page=groups">📚 Danh sách nhóm</a>
             <a href="index.php?action=logout" class="logout">🚪 Đăng xuất</a>
         </nav>
@@ -52,7 +49,6 @@ if (!isset($_SESSION['user_id'])) {
                     <button type="submit" class="btn">Gửi Lời Mời</button>
                 </form>
             </div>
-
             <div class="card task-create-card">
                 <h2>Tạo công việc mới</h2>
                 <form action="index.php?action=create_task" method="POST" class="task-form">
@@ -112,8 +108,7 @@ if (!isset($_SESSION['user_id'])) {
                         <h2>Chat Nhóm</h2>
                         <small class="muted">Realtime / chia sẻ file</small>
                     </div>
-                    </div>
-
+                </div>
                 <div id="chat-box" class="chat-box">
                     <?php if (empty($messages)): ?>
                         <p class="muted">Chưa có tin nhắn nào.</p>
@@ -132,11 +127,9 @@ if (!isset($_SESSION['user_id'])) {
                                         <small class="time"><?php echo date('d/m H:i', strtotime($msg['created_at'])); ?></small>
                                     </div>
                                 </div>
-
                                 <div class="chat-body">
                                     <?php if (!empty($msg['file_id'])): ?>
                                         <p class="file-line">Đã gửi một file: <a href="<?php echo htmlspecialchars($msg['file_path']); ?>" target="_blank"><?php echo htmlspecialchars($msg['file_name']); ?></a></p>
-                                    
                                     <?php elseif (!empty($msg['poll_id'])): ?>
                                         <?php
                                         $current_poll = null;
@@ -184,7 +177,7 @@ if (!isset($_SESSION['user_id'])) {
                                             </div>
                                         <?php endif; ?>
                                     <?php else: ?>
-                                        <p><?php echo htmlspecialchars($msg['message_content']); ?></p>
+                                        <p><?php echo nl2br(htmlspecialchars($msg['message_content'])); ?></p>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -192,31 +185,37 @@ if (!isset($_SESSION['user_id'])) {
                     <?php endif; ?>
                 </div>
 
-                <div id="chat-controls" class="chat-controls">
-                    <form id="hidden-file-form" action="index.php?action=send_file" method="POST" enctype="multipart/form-data" style="display: none;">
-                        <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
-                        <input type="file" name="group_file" id="group_file_input" onchange="this.form.submit()" title="Đính kèm file">
-                    </form>
+                <div class="chat-controls-wrapper">
+                    <div id="emoji-picker" class="emoji-picker">
+                        <span>🙂</span><span>😂</span><span>❤️</span><span>👍</span><span>🎉</span><span>🙏</span><span>🤔</span><span>😢</span>
+                    </div>
 
-                    <button id="file-upload-btn" class="btn-icon" onclick="document.getElementById('group_file_input').click();" title="Đính kèm file">📎</button>
-                    
-                    <button id="create-poll-btn" class="btn-icon" title="Tạo bình chọn">📊</button>
-
-                    <form id="chat-form" action="index.php?action=send_message" method="POST" class="chat-form">
-                        <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
-                        <input type="text" name="message_content" placeholder="Gõ tin nhắn của bạn..." required autocomplete="off">
-                        <button type="submit" class="btn btn-primary">Gửi</button>
-                    </form>
-                </div>
-            </div>
+                    <div id="chat-controls" class="chat-controls">
+                        <form id="hidden-file-form" action="index.php?action=send_file" method="POST" enctype="multipart/form-data" style="display: none;">
+                            <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
+                            <input type="file" name="group_file" id="group_file_input" onchange="this.form.submit()" title="Đính kèm file">
+                        </form>
+                        <button id="file-upload-btn" class="btn-icon" onclick="document.getElementById('group_file_input').click();" title="Đính kèm file">📎</button>
+                        <button id="create-poll-btn" class="btn-icon" title="Tạo bình chọn">📊</button>
+                        
+                        <button id="emoji-toggle-btn" class="btn-icon" title="Chọn icon">🙂</button> 
+                        
+                        <form id="chat-form" action="index.php?action=send_message" method="POST" class="chat-form">
+                            <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
+                            <input type="text" id="chat-message-input" name="message_content" placeholder="Gõ tin nhắn của bạn..." required autocomplete="off">
+                            <button type="submit" class="btn btn-primary">Gửi</button>
+                        </form>
+                    </div>
+                </div> </div>
 
             <aside class="card info-sidebar" id="info-sidebar">
                 <div class="info-sidebar-header">
                     <h3>Thông tin hội thoại</h3>
-                    </div>
+                </div>
                 <div class="info-sidebar-content">
-                    <h4>Thành viên (<?php echo count($members); ?>)</h4>
-                    <ul class="member-list">
+                    
+                    <h4 class="sidebar-toggle-header active">Thành viên (<?php echo count($members); ?>)</h4>
+                    <ul class="member-list sidebar-toggled-content is-open">
                         <?php foreach ($members as $member): ?>
                             <li>
                                 <a href="index.php?page=profile&id=<?php echo $member['user_id']; ?>" class="member-link">
@@ -226,13 +225,34 @@ if (!isset($_SESSION['user_id'])) {
                             </li>
                         <?php endforeach; ?>
                     </ul>
-                    </div>
-            </aside>
 
+                    <h4 class="sidebar-toggle-header">Kho lưu trữ file (<?php echo count($chat_files); ?>)</h4>
+                    <ul class="file-list sidebar-toggled-content">
+                        <?php if (empty($chat_files)): ?>
+                            <li class="file-list-item-empty">Chưa có file nào được gửi.</li>
+                        <?php else: ?>
+                            <?php foreach ($chat_files as $file): ?>
+                            <li class="file-list-item">
+                                <a href="<?php echo htmlspecialchars($file['file_path']); ?>" target="_blank">
+                                    <div class="file-icon">📁</div>
+                                    <div class="file-info">
+                                        <span class="file-name"><?php echo htmlspecialchars($file['file_name']); ?></span>
+                                        <span class="file-meta">
+                                            Bởi: <?php echo htmlspecialchars($file['uploader_name']); ?> 
+                                            - <?php echo date('d/m/Y', strtotime($file['created_at'])); ?>
+                                        </span>
+                                    </div>
+                                </a>
+                            </li>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </ul>
+                </div>
+            </aside>
         </section>
 
         <section class="kanban-section">
-             <h2>Bảng công việc (Kanban)</h2>
+            <h2>Bảng công việc (Kanban)</h2>
             <?php
             $columns = ['backlog' => [], 'in_progress' => [], 'review' => [], 'done' => []];
             if (is_array($tasks) || is_object($tasks)) {
@@ -340,7 +360,7 @@ if (!isset($_SESSION['user_id'])) {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             
-            // --- 1. PHẦN KÉO-THẢ (Giữ nguyên) ---
+            // --- 1. KÉO-THẢ (Giữ nguyên) ---
             const columnIds = ['col-backlog', 'col-in_progress', 'col-review', 'col-done'];
             columnIds.forEach(colId => {
                 const column = document.getElementById(colId);
@@ -367,21 +387,17 @@ if (!isset($_SESSION['user_id'])) {
                 .catch(error => console.error('Lỗi fetch:', error));
             }
 
-            // --- 2. PHẦN MODAL TASK (Giữ nguyên) ---
-            const modal = document.getElementById('task-details-modal');
+            // --- 2. MODAL TASK (Giữ nguyên) ---
+            const taskModal = document.getElementById('task-details-modal'); // Sửa tên biến
             const closeModalBtn = document.getElementById('modal-close-btn');
-            
-            if (modal) {
+            if (taskModal) {
                 document.querySelectorAll('.task-card').forEach(card => {
                     card.addEventListener('click', function() {
                         const taskId = this.dataset.taskId;
                         openTaskModal(taskId);
                     });
                 });
-                
-                closeModalBtn.onclick = () => { modal.style.display = 'none'; }
-                /* (BỎ SỰ KIỆN window.onclick CŨ) */
-
+                closeModalBtn.onclick = () => { taskModal.style.display = 'none'; }
                 document.getElementById('add-comment-form').addEventListener('submit', function(e) {
                     e.preventDefault();
                     const formData = new FormData(this);
@@ -400,15 +416,12 @@ if (!isset($_SESSION['user_id'])) {
                     });
                 });
             }
-
-            // HÀM MỞ MODAL TASK (Giữ nguyên)
             function openTaskModal(taskId) {
                 fetch(`index.php?action=get_task_details&task_id=${taskId}`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
                             const task = data.task;
-                            
                             document.getElementById('modal-task-title').textContent = task.task_title;
                             document.getElementById('modal-task-assignee').textContent = task.assignee_name || 'Chưa có';
                             document.getElementById('modal-task-creator').textContent = task.creator_name || 'N/A';
@@ -416,10 +429,8 @@ if (!isset($_SESSION['user_id'])) {
                             document.getElementById('modal-task-due-date').textContent = task.due_date || 'N/A';
                             document.getElementById('modal-task-points').textContent = task.points;
                             document.getElementById('modal-task-description').textContent = task.task_description || 'Không có mô tả.';
-                            
                             document.getElementById('modal-comment-task-id').value = task.task_id;
                             document.getElementById('modal-file-task-id').value = task.task_id;
-
                             const filesContainer = document.getElementById('modal-task-files');
                             filesContainer.innerHTML = '';
                             if (data.files && data.files.length > 0) {
@@ -431,7 +442,6 @@ if (!isset($_SESSION['user_id'])) {
                             } else {
                                 filesContainer.innerHTML = '<li>Chưa có file nào.</li>';
                             }
-                            
                             const commentsContainer = document.getElementById('task-details-comments');
                             commentsContainer.innerHTML = '';
                             if (data.comments && data.comments.length > 0) {
@@ -439,15 +449,12 @@ if (!isset($_SESSION['user_id'])) {
                             } else {
                                 commentsContainer.innerHTML = '<p>Chưa có bình luận nào.</p>';
                             }
-
-                            modal.style.display = 'block';
+                            taskModal.style.display = 'block';
                         } else {
                             alert('Lỗi: ' + data.message);
                         }
                     });
             }
-
-            // Hàm trợ giúp: thêm HTML của 1 comment (Giữ nguyên)
             function appendComment(comment, container) {
                 const commentEl = document.createElement('div');
                 commentEl.className = 'comment';
@@ -458,38 +465,85 @@ if (!isset($_SESSION['user_id'])) {
                 container.appendChild(commentEl);
             }
 
-            // --- 3. PHẦN TỰ CUỘN CHAT (Giữ nguyên) ---
+            // --- 3. TỰ CUỘN CHAT (Giữ nguyên) ---
             const chatBox = document.getElementById('chat-box');
             if (chatBox) {
                 chatBox.scrollTop = chatBox.scrollHeight;
             }
 
-            // --- 4. (XÓA BỎ) LOGIC CHO SIDEBAR THÔNG TIN ---
-            /* (Toàn bộ code JS cho toggleBtn, closeInfoBtn đã bị xóa) */
-
-            // --- 5. (SỬA LẠI) LOGIC CHO MODAL TẠO POLL ---
+            // --- 4. MODAL TẠO POLL (Giữ nguyên) ---
             const pollModal = document.getElementById('create-poll-modal');
             const openPollBtn = document.getElementById('create-poll-btn');
             const closePollBtn = document.getElementById('close-poll-modal-btn');
-
             if (pollModal && openPollBtn && closePollBtn) {
                 openPollBtn.addEventListener('click', (e) => {
                     e.preventDefault(); 
                     pollModal.style.display = 'block';
                 });
-                
                 closePollBtn.addEventListener('click', () => {
                     pollModal.style.display = 'none';
                 });
+            }
 
-                // (SỬA LẠI) Đóng modal khi click ra ngoài
-                window.addEventListener('click', (event) => {
-                    if (event.target == pollModal) {
-                        pollModal.style.display = 'none';
+            // --- 5. ĐÓNG MODAL KHI CLICK RA NGOÀI (Giữ nguyên) ---
+            window.addEventListener('click', (event) => {
+                if (event.target == pollModal) {
+                    pollModal.style.display = 'none';
+                }
+                if (event.target == taskModal) { // Sửa tên biến
+                    taskModal.style.display = 'none';
+                }
+            });
+
+            // --- 6. SIDEBAR ACCORDION (File, Thành viên) (Giữ nguyên) ---
+            document.querySelectorAll('.sidebar-toggle-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const content = header.nextElementSibling;
+                    if (content && content.classList.contains('sidebar-toggled-content')) {
+                        content.classList.toggle('is-open');
+                        header.classList.toggle('active');
                     }
-                    // Đóng modal task detail (giữ nguyên)
-                    if (event.target == modal) {
-                        modal.style.display = 'none';
+                });
+            });
+
+
+            // --- 7. (MỚI) LOGIC CHO BẢNG CHỌN ICON ---
+            const emojiToggleBtn = document.getElementById('emoji-toggle-btn');
+            const emojiPicker = document.getElementById('emoji-picker');
+            const chatInput = document.getElementById('chat-message-input');
+
+            if (emojiToggleBtn && emojiPicker && chatInput) {
+                // Bật/tắt bảng chọn
+                emojiToggleBtn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Ngăn click lan ra window
+                    emojiPicker.classList.toggle('is-open');
+                });
+
+                // Thêm icon vào input khi bấm
+                emojiPicker.addEventListener('click', (e) => {
+                    // Chỉ xử lý khi bấm vào <span> (icon)
+                    if (e.target.tagName === 'SPAN') {
+                        e.stopPropagation();
+                        const icon = e.target.textContent;
+                        
+                        // Chèn icon vào vị trí con trỏ
+                        const start = chatInput.selectionStart;
+                        const end = chatInput.selectionEnd;
+                        const text = chatInput.value;
+                        
+                        chatInput.value = text.substring(0, start) + icon + text.substring(end);
+                        
+                        // Di chuyển con trỏ đến sau icon vừa chèn
+                        chatInput.selectionStart = chatInput.selectionEnd = start + icon.length;
+                        
+                        chatInput.focus(); // Tập trung lại vào ô input
+                    }
+                });
+
+                // Đóng bảng chọn khi bấm ra ngoài
+                window.addEventListener('click', (e) => {
+                    if (emojiPicker.classList.contains('is-open')) {
+                        emojiPicker.classList.remove('is-open');
                     }
                 });
             }

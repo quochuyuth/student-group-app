@@ -21,8 +21,8 @@ if (!isset($_SESSION['user_id'])) {
     <nav>
       <a href="index.php?page=dashboard">Trang chủ</a>
       <a href="index.php?page=profile">Hồ sơ</a>
-      <a href="index.php?page=groups">Nhóm</a>
-      <a href="index.php?page=group_details&id=<?php echo $group['group_id']; ?>">🔙 Chi tiết nhóm</a>
+      <a href="index.php?page=groups">Danh sách nhóm</a>
+      <a href="index.php?page=group_details&id=<?php echo $group['group_id']; ?>">🔙 Quản lí nhóm</a>
       <a href="index.php?action=logout" class="logout-btn">🚪 Đăng xuất</a>
     </nav>
   </header>

@@ -18,16 +18,14 @@ class Chat {
         } catch (PDOException $e) { return false; }
     }
 
-    /**
-     * SỬA LỖI: Thêm $file_size
-     */
     public function saveFileMessage($group_id, $user_id, $file_name, $file_path, $file_size, $file_type) {
         try {
             $this->db->beginTransaction();
 
-            // 1. Thêm vào bảng 'files' (ĐÃ THÊM file_size)
-            $sql_file = "INSERT INTO files (group_id, uploaded_by_user_id, file_name, file_path, file_size, file_type)
-                         VALUES (?, ?, ?, ?, ?, ?)";
+            // 1. Thêm vào bảng 'files'
+            // (Chúng ta giả định file chat sẽ có task_id = NULL)
+            $sql_file = "INSERT INTO files (group_id, uploaded_by_user_id, file_name, file_path, file_size, file_type, task_id)
+                         VALUES (?, ?, ?, ?, ?, ?, NULL)";
             $stmt_file = $this->db->prepare($sql_file);
             $stmt_file->execute([$group_id, $user_id, $file_name, $file_path, $file_size, $file_type]);
             
@@ -48,9 +46,6 @@ class Chat {
         }
     }
 
-    /**
-     * Cập nhật hàm lấy tin nhắn (Đã có từ trước)
-     */
     public function getMessagesByGroupId($group_id, $limit = 50) {
         $sql = "SELECT 
                     m.*, 
@@ -72,8 +67,6 @@ class Chat {
         return array_reverse($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
-    // *** (SỬA ĐỔI 1) ***
-    // Thêm hàm mới để gửi tin nhắn chỉ chứa poll
     public function sendPollMessage($group_id, $user_id, $poll_id) {
         $sql = "INSERT INTO messages (group_id, sender_user_id, poll_id, created_at) 
                 VALUES (?, ?, ?, NOW())";
@@ -83,6 +76,24 @@ class Chat {
         } catch (PDOException $e) { 
             return false; 
         }
+    }
+
+    /**
+     * (MỚI) Lấy tất cả các file đã gửi trong chat (không phải file task)
+     * Dựa trên logic là file chat sẽ có task_id LÀ NULL
+     */
+    public function getChatFilesByGroupId($group_id) {
+        $sql = "SELECT 
+                    f.file_name, f.file_path, f.file_size, f.created_at,
+                    u.username AS uploader_name
+                FROM files f
+                JOIN users u ON f.uploaded_by_user_id = u.user_id
+                WHERE f.group_id = ? AND f.task_id IS NULL
+                ORDER BY f.created_at DESC";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$group_id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
 ?>

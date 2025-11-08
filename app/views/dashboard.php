@@ -20,7 +20,7 @@ if (!isset($_SESSION['user_id'])) {
         <h1 class="logo">Student<span>Group</span>App</h1>
         <nav>
             <a href="index.php?page=profile">Hồ sơ</a>
-            <a href="index.php?page=groups">Quản lí nhóm</a>
+            <a href="index.php?page=groups">Danh sách nhóm</a>
             <a href="index.php?action=logout" class="btn-logout">Đăng xuất</a>
         </nav>
     </header>

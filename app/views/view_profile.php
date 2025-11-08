@@ -30,7 +30,7 @@ if (!isset($_SESSION['user_id'])) {
     <div class="logo">Student<span>Group</span>App</div>
     <nav>
       <a href="index.php?page=edit_profile">Hồ sơ của tôi</a> 
-      <a href="index.php?page=groups">Quản Lí Nhóm</a>
+      <a href="index.php?page=groups">Danh Sách Nhóm</a>
       <a href="index.php?page=dashboard">Trang Chủ</a>
       <a href="index.php?action=logout" class="btn-logout">Đăng Xuất</a>
     </nav>

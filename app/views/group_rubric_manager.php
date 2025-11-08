@@ -22,7 +22,7 @@ if (!isset($_SESSION['user_id'])) {
         <div class="logo">Student<span>Group</span>App</div>
         <nav>
             <a href="index.php?page=dashboard">Trang Chủ</a>
-            <a href="index.php?page=group_details&id=<?php echo $group['group_id']; ?>">Chi tiết nhóm</a>
+            <a href="index.php?page=group_details&id=<?php echo $group['group_id']; ?>">Quản lí nhóm</a>
             <a href="index.php?page=group_rubric&group_id=<?php echo $group['group_id']; ?>">Trang Đánh giá</a>
             <a href="index.php?action=logout" class="btn-logout">Đăng Xuất</a>
         </nav>

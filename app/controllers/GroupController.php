@@ -5,7 +5,7 @@ require_once 'app/models/Group.php';
 require_once 'app/models/User.php';
 require_once 'app/models/Task.php';
 require_once 'app/models/Chat.php';
-require_once 'app/models/Poll.php'; // THÊM DÒNG NÀY
+require_once 'app/models/Poll.php';
 
 class GroupController {
     private $db;
@@ -13,7 +13,7 @@ class GroupController {
     private $userModel;
     private $taskModel;
     private $chatModel;
-    private $pollModel; // THÊM BIẾN NÀY
+    private $pollModel; 
 
     public function __construct($db) {
         $this->db = $db;
@@ -21,7 +21,7 @@ class GroupController {
         $this->userModel = new User($this->db);
         $this->taskModel = new Task($this->db);
         $this->chatModel = new Chat($this->db);
-        $this->pollModel = new Poll($this->db); // THÊM DÒNG NÀY
+        $this->pollModel = new Poll($this->db);
     }
 
     // ... (Giữ nguyên các hàm: index, create, inviteMember, acceptInvitation, rejectInvitation) ...
@@ -114,8 +114,7 @@ class GroupController {
     }
 
     /**
-     * CẬP NHẬT HÀM NÀY:
-     * Hiển thị trang chi tiết (thêm logic tải polls)
+     * (CẬP NHẬT) Hiển thị trang chi tiết
      */
     public function show() {
         if (!isset($_SESSION['user_id'])) {
@@ -139,10 +138,8 @@ class GroupController {
         $members = $this->groupModel->getMembersByGroupId($group_id);
         $messages = $this->chatModel->getMessagesByGroupId($group_id);
         
-        // 5. LẤY POLLS (MỚI)
         $polls = $this->pollModel->getPollsByGroupId($group_id);
         
-        // 6. LẤY VOTE CỦA USER (MỚI)
         $user_votes = [];
         foreach ($polls as $poll) {
             $user_vote = $this->pollModel->getUserVote($poll['poll_id'], $_SESSION['user_id']);
@@ -150,6 +147,9 @@ class GroupController {
                 $user_votes[$poll['poll_id']] = $user_vote;
             }
         }
+
+        // *** (THÊM DÒNG NÀY) ***
+        $chat_files = $this->chatModel->getChatFilesByGroupId($group_id);
         
         require 'app/views/group_details.php';
     }

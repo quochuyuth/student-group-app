@@ -22,7 +22,7 @@ if (!isset($_SESSION['user_id'])) {
             <a href="index.php?page=dashboard">Trang Chủ</a>
             <a href="index.php?page=profile">Hồ Sơ</a>
             <a href="index.php?page=groups">Quản Lý Nhóm</a>
-            <a href="index.php?page=group_details&id=<?php echo $group['group_id']; ?>">Chi Tiết Nhóm</a>
+            <a href="index.php?page=group_details&id=<?php echo $group['group_id']; ?>">Quản lí nhóm</a>
             <a href="index.php?action=logout" class="btn-logout">Đăng Xuất</a>
         </nav>
     </header>

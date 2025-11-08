@@ -138,10 +138,25 @@ body{
 .meta-text strong{ display:block; font-size:0.95rem; }
 .meta-text .time{ display:block; color:var(--muted); font-size:0.78rem; margin-top:2px; }
 
-.chat-body p{ margin-top:6px; color:#06233b; }
+.chat-body p{ 
+  margin-top:6px; 
+  color:#06233b; 
+  white-space: pre-wrap; /* Giúp icon và text xuống dòng */
+  word-break: break-word; /* Bẻ gãy từ nếu quá dài */
+}
 .file-line a{ color: #085f9f; font-weight:600; text-decoration:none; }
 
-.chat-controls{ display:flex; gap:8px; align-items:center; margin-top:10px; }
+/* (SỬA) .chat-controls và .chat-controls-wrapper */
+.chat-controls-wrapper {
+  position: relative; /* Quan trọng: để định vị bảng icon */
+  margin-top: 10px;
+}
+.chat-controls{ 
+  display:flex; 
+  gap:8px; 
+  align-items:center; 
+  /* margin-top: 10px; (Đã chuyển lên wrapper) */
+}
 .chat-form{ display:flex; gap:8px; flex:1; }
 .chat-form input[type="text"]{
   flex:1; padding:10px 12px; border-radius:10px; border:1px solid rgba(10,10,10,0.06);
@@ -149,10 +164,18 @@ body{
 }
 
 /* small icon button */
-.btn-icon{ background:transparent; border:1px solid rgba(255,255,255,0.18); padding:8px 10px; border-radius:10px; cursor:pointer; }
+.btn-icon{ 
+  background:transparent; 
+  border:1px solid rgba(255,255,255,0.18); 
+  padding:8px 10px; 
+  border-radius:10px; 
+  cursor:pointer;
+  font-size: 1rem; /* Thêm để icon hiển thị đúng */
+}
 
 /* Polls (CSS GỐC CỦA BẠN - SẼ BỊ ẨN) */
 .poll-card h2{ margin-bottom:8px; }
+/* ... (toàn bộ .poll-card cũ) ... */
 .poll-create input[type="text"]{ width:100%; padding:8px 10px; border-radius:8px; margin-bottom:8px; }
 .poll-list{ max-height:320px; overflow:auto; margin-top:8px; }
 .poll-container{ position:relative; padding:12px; border-radius:10px; margin-bottom:10px; background: linear-gradient(180deg, rgba(255,255,255,0.65), rgba(255,255,255,0.55)); }
@@ -245,7 +268,7 @@ body{
 
 
 /* ============================================= */
-/* === (MỚI) CODE NÂNG CẤP CHAT/POLL/SIDEBAR === */
+/* === (GỐC) CODE NÂNG CẤP CHAT/POLL/SIDEBAR === */
 /* ============================================= */
 
 /* Ẩn poll-card cũ (vì đã bị thay thế) */
@@ -253,16 +276,10 @@ body{
   display: none !important;
 }
 
-/* ---- 2. CSS cho Sidebar Thông tin (Mới) ---- */
-/* Vì .info-sidebar là 1 .card và nằm trong .mid-grid,
-  nó sẽ tự động chiếm cột thứ 2 (380px)
-  trong layout grid cũ của bạn.
-*/
+/* ---- 2. CSS cho Sidebar Thông tin (Gốc) ---- */
 .info-sidebar {
-  /* Thêm flex để kiểm soát content bên trong */
   display: flex;
   flex-direction: column;
-  /* Đảm bảo chiều cao không bị vỡ */
   height: 100%;
 }
 
@@ -279,13 +296,9 @@ body{
   font-size: 1.1rem;
 }
 
-/* (SỬA LỖI LAYOUT) Thêm chiều cao cố định cho content
-   để khớp với .chat-box (420px) 
-*/
 .info-sidebar-content {
   flex: 1;
   overflow-y: auto;
-  height: 420px; /* <-- Đây là FIX quan trọng nhất */
 }
 .info-sidebar-content h4 {
   margin-top: 10px;
@@ -294,18 +307,16 @@ body{
 }
 .member-list {
   list-style: none;
-  padding-left: 0; /* Xóa padding list */
+  padding-left: 0; 
 }
 .member-list li {
-  /* Xóa style cũ, để thẻ <a> xử lý */
+  /* Trống */
 }
-
-/* (TÍNH NĂNG MỚI) CSS cho link profile */
 .member-link {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 4px; /* Thêm padding 1 chút */
+  padding: 8px 4px; 
   border-radius: 8px;
   text-decoration: none;
   transition: background-color 0.2s;
@@ -322,17 +333,15 @@ body{
 }
 
 
-/* ---- 3. CSS cho Header Chat Card (đã xóa nút) ---- */
+/* ---- 3. CSS cho Header Chat Card (Gốc) ---- */
 .chat-card .card-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
 }
-/* Nút 'i' không còn, không cần CSS */
 
-
-/* ---- 4. CSS cho Poll bên trong tin nhắn (Giữ nguyên) ---- */
+/* ---- 4. CSS cho Poll bên trong tin nhắn (Gốc) ---- */
 .chat-message.is-poll {
   background: linear-gradient(90deg, #f3e8ff, #eef2ff);
   max-width: 95%; 
@@ -382,10 +391,11 @@ body{
   font-weight: 600;
 }
 
-/* ---- 5. CSS cho Modal Tạo Poll (Giữ nguyên) ---- */
+/* ---- 5. CSS cho Modal Tạo Poll (Gốc) ---- */
 #create-poll-modal .modal-content {
   max-width: 500px;
 }
+/* ... (toàn bộ CSS modal) ... */
 .modal-content .form-group,
 .modal-content .poll-options-modal {
   display: flex;
@@ -416,10 +426,166 @@ body{
   background: #f8fafc;
   font-family: 'Poppins', sans-serif;
 }
-
 .poll-options-modal input {
   margin-bottom: 8px;
 }
 .poll-options-modal input:last-child {
   margin-bottom: 0;
+}
+
+
+/* ============================================= */
+/* === (GỐC) CSS KHO LƯU TRỮ FILE + ACCORDION === */
+/* ============================================= */
+
+/* 1. CSS cho tiêu đề (Thành viên, File) để bấm vào */
+.sidebar-toggle-header {
+  font-size: 1.05rem; /* Cỡ chữ h4 */
+  color: #06233b;
+  cursor: pointer;
+  padding: 10px 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+  position: relative; /* Để thêm icon */
+  margin-top: 10px;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+.sidebar-toggle-header:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+/* Thêm icon mũi tên (tam giác) */
+.sidebar-toggle-header::after {
+  content: '▼'; /* Icon mũi tên xuống */
+  font-size: 0.7rem;
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%) rotate(-90deg); /* Mặc định xoay (đóng) */
+  transition: transform 0.3s ease;
+  color: #334155;
+}
+/* Khi mục được mở (active), xoay mũi tên lại */
+.sidebar-toggle-header.active::after {
+  transform: translateY(-50%) rotate(0deg); /* Xoay về 0 độ (mở) */
+}
+/* Mặc định mở mục đầu tiên (Thành viên) */
+.sidebar-toggle-header:first-child::after { 
+  transform: translateY(-50%) rotate(0deg);
+}
+
+
+/* 2. CSS cho nội dung (danh sách thành viên, file) */
+.sidebar-toggled-content {
+  display: none; /* Mặc định ẩn */
+  list-style: none;
+  padding-left: 0;
+  margin-top: 5px;
+  overflow: hidden; /* Để có hiệu ứng đẹp */
+  animation: fadeIn 0.5s ease;
+}
+/* Trạng thái MỞ */
+.sidebar-toggled-content.is-open {
+  display: block;
+}
+/* Mặc định mở mục đầu tiên (Thành viên) */
+.info-sidebar-content .sidebar-toggled-content:first-of-type {
+  display: block;
+}
+.info-sidebar-content .sidebar-toggle-header:first-child {
+  margin-top: 0; /* Không cách top cho mục đầu tiên */
+}
+@keyframes fadeIn {
+  from { opacity: 0; max-height: 0; }
+  to { opacity: 1; max-height: 1000px; } /* 1000px là giá trị lớn */
+}
+
+
+/* 3. CSS cho danh sách file (GỐC) */
+.file-list {
+  /* Đã có .sidebar-toggled-content */
+}
+.file-list-item {
+  margin-bottom: 5px;
+}
+.file-list-item a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+.file-list-item a:hover {
+  background-color: rgba(255, 255, 255, 0.7);
+}
+.file-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+.file-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Ngăn tên file dài làm vỡ layout */
+}
+.file-name {
+  font-weight: 500;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Thêm ... nếu tên file quá dài */
+}
+.file-meta {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.file-list-item-empty {
+  font-style: italic;
+  color: var(--muted);
+  padding: 10px;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+
+/* ============================================= */
+/* === (MỚI) CSS CHO BẢNG CHỌN ICON (EMOJI) === */
+/* ============================================= */
+
+.emoji-picker {
+  display: none; /* Mặc định ẩn */
+  position: absolute;
+  bottom: calc(100% + 5px); /* Nằm ngay trên thanh controls, cách 5px */
+  left: 0;
+  background: var(--glass);
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 10px;
+  padding: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  backdrop-filter: blur(5px);
+  z-index: 20;
+  /* Thêm flex để các icon xếp hàng */
+  display: flex;
+  gap: 5px;
+  /* Mặc định ẩn (sẽ dùng JS để bật/tắt) */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  transition: all 0.2s ease;
+}
+.emoji-picker.is-open {
+  display: flex;
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+.emoji-picker span {
+  font-size: 1.5rem;
+  padding: 5px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.2s;
+}
+.emoji-picker span:hover {
+  background-color: rgba(255, 255, 255, 0.7);
 }
