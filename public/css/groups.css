@@ -171,9 +171,35 @@ input:focus, textarea:focus {
   border-radius: 8px;
   margin-bottom: 20px;
 }
+.group-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
 
-/* ===== Animation ===== */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(15px); }
-  to { opacity: 1; transform: translateY(0); }
+.group-card .group-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.group-card .group-info {
+  flex: 1;
+}
+
+.view-btn {
+  background: linear-gradient(135deg, #007bff, #00bfff);
+  color: white;
+  text-decoration: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: 0.3s;
+  white-space: nowrap;
+}
+.view-btn:hover {
+  background: linear-gradient(135deg, #0056b3, #0080ff);
+  transform: translateY(-2px);
 }

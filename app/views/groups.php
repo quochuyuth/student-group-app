@@ -81,11 +81,18 @@ if (!isset($_SESSION['user_id'])) {
             <?php else: ?>
                 <ul class="group-list">
                     <?php foreach ($groups as $group): ?>
-                        <li class="group-card">
-                            <h3><a href="index.php?page=group_details&id=<?= $group['group_id']; ?>"><?= htmlspecialchars($group['group_name']); ?></a></h3>
-                            <p><?= htmlspecialchars($group['group_description']); ?></p>
-                            <span class="role">Vai trò: <strong><?= htmlspecialchars($group['role']); ?></strong></span>
-                        </li>
+                        <li class="group-card" onclick="window.location='index.php?page=group_details&id=<?= $group['group_id']; ?>'">
+    <div class="group-content">
+        <div class="group-info">
+            <h3><?= htmlspecialchars($group['group_name']); ?></h3>
+            <p><?= htmlspecialchars($group['group_description']); ?></p>
+            <span class="role">Vai trò: <strong><?= htmlspecialchars($group['role']); ?></strong></span>
+        </div>
+        <a href="index.php?page=group_details&id=<?= $group['group_id']; ?>" 
+           class="view-btn" onclick="event.stopPropagation();">👁 Xem nhóm</a>
+    </div>
+</li>
+
                     <?php endforeach; ?>
                 </ul>
             <?php endif; ?>

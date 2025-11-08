@@ -3,7 +3,6 @@
 
 class Group {
     private $db;
-    // ... (Giữ nguyên các hàm cũ: __construct, getGroupsByUserId, create, getGroupById, isUserInGroup, hasPendingInvitation, createInvitation, getPendingInvitationsByUserId, acceptInvitation, rejectInvitation) ...
     
     public function __construct($db) {
         $this->db = $db;
@@ -106,9 +105,6 @@ class Group {
         }
     }
     
-    // ===================================================
-    // HÀM MỚI: LẤY DANH SÁCH THÀNH VIÊN CỦA NHÓM
-    // ===================================================
     public function getMembersByGroupId($group_id) {
         $sql = "SELECT u.user_id, u.username 
                 FROM users u
@@ -118,6 +114,19 @@ class Group {
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$group_id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * HÀM MỚI: Lấy vai trò (role) của 1 user cụ thể trong 1 nhóm
+     */
+    public function getUserRoleInGroup($group_id, $user_id) {
+        $sql = "SELECT role FROM group_members 
+                WHERE group_id = ? AND user_id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$group_id, $user_id]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $result ? $result['role'] : null; // Trả về 'admin' hoặc 'member'
     }
 }
 ?>
