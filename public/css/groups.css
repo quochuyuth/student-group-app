@@ -1,0 +1,179 @@
+/* ===== Reset ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* ===== Background ===== */
+body {
+  min-height: 100vh;
+  color: #333;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.background {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(120deg, #89f7fe, #66a6ff, #fbc2eb);
+  background-size: 300% 300%;
+  animation: gradientMove 10s ease infinite;
+  z-index: -1;
+}
+
+@keyframes gradientMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ===== Header ===== */
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.2rem 3rem;
+  backdrop-filter: blur(12px);
+  background: rgba(255,255,255,0.3);
+  border-bottom: 1px solid rgba(255,255,255,0.4);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  color: #333;
+}
+
+.main-header h1 span {
+  color: #007bff;
+}
+
+.header-nav a {
+  margin-left: 1.5rem;
+  text-decoration: none;
+  color: #333;
+  font-weight: 600;
+  transition: 0.3s;
+}
+.header-nav a:hover {
+  color: #007bff;
+}
+.logout {
+  background: #ff4b2b;
+  color: white !important;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+}
+.logout:hover {
+  background: #ff1e00;
+}
+
+/* ===== Container ===== */
+.container {
+  max-width: 1100px;
+  margin: 3rem auto;
+  padding: 0 20px;
+}
+
+/* ===== Card ===== */
+.card {
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+  margin-bottom: 2rem;
+  animation: fadeIn 0.8s ease;
+}
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+/* ===== Invitation ===== */
+.invitation-item {
+  background: rgba(255,255,255,0.6);
+  border: 1px solid rgba(0,123,255,0.2);
+  border-radius: 10px;
+  padding: 15px 20px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.invite-actions form {
+  display: inline;
+  margin-left: 10px;
+}
+.btn {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+.accept { background: #28a745; color: #fff; }
+.reject { background: #dc3545; color: #fff; }
+.create {
+  background: linear-gradient(135deg, #007bff, #00e0ff);
+  color: #fff;
+}
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+/* ===== Form ===== */
+.form-group {
+  margin-bottom: 15px;
+}
+input[type="text"], textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+  transition: 0.3s;
+}
+input:focus, textarea:focus {
+  border-color: #007bff;
+}
+
+/* ===== Group List ===== */
+.group-card {
+  background: rgba(255,255,255,0.7);
+  padding: 15px 20px;
+  border-radius: 10px;
+  border-left: 5px solid #007bff;
+  margin-bottom: 12px;
+  transition: all 0.3s ease;
+}
+.group-card:hover {
+  background: rgba(240,248,255,0.9);
+  transform: translateY(-3px);
+}
+.group-card h3 a {
+  text-decoration: none;
+  color: #007bff;
+}
+.role {
+  color: #666;
+  font-size: 14px;
+}
+
+/* ===== Flash Message ===== */
+.flash-message {
+  background: #d1ecf1;
+  color: #0c5460;
+  padding: 12px;
+  border-left: 5px solid #17a2b8;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+/* ===== Animation ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}

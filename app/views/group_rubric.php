@@ -22,41 +22,32 @@ $criteria_names_vn = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đánh giá Rubric - <?php echo htmlspecialchars($group['group_name']); ?></title>
-    <link rel="stylesheet" href="public/css/style.css">
-    <style>
-        /* (CSS giữ nguyên như cũ) */
-        .rubric-table { width: 100%; border-collapse: collapse; }
-        .rubric-table th, .rubric-table td {
-            border: 1px solid #ddd; padding: 8px; text-align: left;
-        }
-        .rubric-table th { background-color: #f4f4f4; }
-        .rubric-table .score-options { text-align: center; }
-        .rubric-table .score-options label { margin: 0 5px; }
-    </style>
+    <link rel="stylesheet" href="public/css/group_rubric.css">
 </head>
 <body>
-    <header>
-        <h1>Đánh giá Rubric: <?php echo htmlspecialchars($group['group_name']); ?></h1>
+    <div class="background"></div>
+
+    <header class="dashboard-header">
+        <div class="logo">Student<span>Group</span>App</div>
         <nav>
-            <a href="index.php?page=group_details&id=<?php echo $group['group_id']; ?>">Quay lại Chi tiết nhóm</a>
-            <a href="index.php?action=logout">Đăng Xuất</a>
+            <a href="index.php?page=dashboard">Trang Chủ</a>
+            <a href="index.php?page=profile">Hồ sơ</a>
+            <a href="index.php?page=groups">Quản Lí Nhóm</a>
+            <a href="index.php?page=group_details&id=<?php echo $group['group_id']; ?>">Chi tiết nhóm</a>
+            <a href="index.php?action=logout" class="btn-logout">Đăng Xuất</a>
         </nav>
     </header>
 
     <main class="container">
-
-        <?php
-        if (isset($_SESSION['flash_message'])) {
-            echo '<div class="flash-message">' . $_SESSION['flash_message'] . '</div>';
-            unset($_SESSION['flash_message']);
-        }
-        ?>
+        <?php if (isset($_SESSION['flash_message'])): ?>
+            <div class="flash-message"><?= $_SESSION['flash_message']; ?></div>
+            <?php unset($_SESSION['flash_message']); ?>
+        <?php endif; ?>
 
         <form action="index.php?action=submit_rubric" method="POST" class="form-container">
             <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
 
             <h2>1. Chọn đối tượng đánh giá</h2>
-            
             <div class="form-group">
                 <label for="evaluated_user_id">Chọn thành viên:</label>
                 <select id="evaluated_user_id" name="evaluated_user_id" required>
@@ -70,17 +61,8 @@ $criteria_names_vn = [
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="form-group">
-                <label for="task_id">Gắn với công việc (không bắt buộc):</label>
-                <select id="task_id" name="task_id">
-                    <option value="">-- Không gắn --</option>
-                    <?php foreach ($tasks as $task): ?>
-                        <option value="<?php echo $task['task_id']; ?>">
-                            <?php echo htmlspecialchars($task['task_title']); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
+
+        
 
             <h2>2. Cho điểm (Thang 1-4)</h2>
             <p>1 = Yếu, 2 = Trung bình, 3 = Tốt, 4 = Xuất sắc</p>
@@ -95,28 +77,24 @@ $criteria_names_vn = [
                 </thead>
                 <tbody>
                     <?php foreach ($criteria as $name => $weight): ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($criteria_names_vn[$name]); ?></td>
-                        <td><?php echo ($weight * 100); ?>%</td>
-                        <td class="score-options">
-                            <?php for ($i = 1; $i <= 4; $i++): ?>
-                            <label>
-                                <input type="radio" 
-                                       name="scores[<?php echo $name; ?>]" 
-                                       value="<?php echo $i; ?>" required>
-                                <?php echo $i; ?>
-                            </label>
-                            <?php endfor; ?>
-                        </td>
-                    </tr>
+                        <tr>
+                            <td><?php echo htmlspecialchars($criteria_names_vn[$name]); ?></td>
+                            <td><?php echo ($weight * 100); ?>%</td>
+                            <td class="score-options">
+                                <?php for ($i = 1; $i <= 4; $i++): ?>
+                                    <label>
+                                        <input type="radio" name="scores[<?php echo $name; ?>]" value="<?php echo $i; ?>" required>
+                                        <?php echo $i; ?>
+                                    </label>
+                                <?php endfor; ?>
+                            </td>
+                        </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
 
-            <br>
             <button type="submit" class="btn">Gửi Đánh Giá</button>
         </form>
-
     </main>
 </body>
 </html>

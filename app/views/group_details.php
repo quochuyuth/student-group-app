@@ -6,68 +6,41 @@ if (!isset($_SESSION['user_id'])) {
 }
 // Các biến $group, $tasks, $members, $messages, $polls, $user_votes được truyền từ GroupController
 ?>
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chi tiết nhóm: <?php echo htmlspecialchars($group['group_name']); ?></title>
-    <link rel="stylesheet" href="public/css/style.css">
-    
-    <style>
-        /* CSS cho Kanban */
-        .kanban-board { display: flex; justify-content: space-between; gap: 15px; }
-        .kanban-column { width: 24%; background-color: #f4f4f4; border-radius: 5px; padding: 10px; min-height: 300px; }
-        .kanban-column h3 { margin-top: 0; padding-bottom: 10px; border-bottom: 2px solid #ddd; }
-        .task-card { background-color: #fff; border: 1px solid #ddd; border-radius: 5px; padding: 10px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); cursor: pointer; }
-        .task-card:active { cursor: grabbing; }
-        .task-card p { margin: 5px 0; }
-        .task-card .priority { font-weight: bold; padding: 2px 5px; border-radius: 3px; display: inline-block; font-size: 0.8em; }
 
-        /* CSS cho Modal */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
-        .modal-content { background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 60%; max-width: 700px; border-radius: 8px; }
-        .modal-close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
-        #task-details-comments { max-height: 200px; overflow-y: auto; background-color: #f9f9f9; padding: 10px; border-radius: 5px; margin-top: 10px; }
-        .comment { border-bottom: 1px solid #eee; padding: 5px 0; }
-        
-        /* CSS cho Chat */
-        #chat-box { height: 400px; overflow-y: auto; border: 1px solid #ddd; background-color: #f9f9f9; padding: 10px; border-radius: 5px; margin-bottom: 10px; }
-        .chat-message { margin-bottom: 10px; padding: 8px 12px; border-radius: 10px; background-color: #fff; border: 1px solid #eee; max-width: 80%; word-wrap: break-word; }
-        .chat-message.is-user { background-color: #dcf8c6; align-self: flex-end; margin-left: auto; }
-        .chat-message.is-file { background-color: #e6f7ff; }
-        .chat-message.is-file p a { font-weight: bold; text-decoration: none; }
-        #chat-controls { display: flex; gap: 10px; }
-        #chat-form { flex: 1; display: flex; }
-        #chat-form input[type="text"] { flex: 1; border-radius: 5px 0 0 5px; }
-        #chat-form button { border-radius: 0 5px 5px 0; }
-        #file-upload-btn { flex-shrink: 0; width: 45px; padding: 0; font-size: 1.2em; border-radius: 5px; }
-        #hidden-file-form { display: none; }
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-        /* CSS cho Polls */
-        .poll-container { border: 1px solid #ddd; padding: 15px; border-radius: 5px; margin-bottom: 15px; background-color: #fdfdfd; }
-        .poll-option { margin: 5px 0; position: relative; padding: 5px; border-radius: 3px; }
-        .poll-option label { display: flex; justify-content: space-between; width: 100%; cursor: pointer; }
-        .poll-option .vote-count { font-weight: bold; }
-        .poll-option .vote-bar { position: absolute; left: 0; top: 0; height: 100%; background-color: #dcf8c6; z-index: -1; opacity: 0.7; }
-        
-        /* CSS CHO DANH SÁCH FILE TRONG MODAL */
-        #modal-task-files { max-height: 150px; overflow-y: auto; background-color: #f9f9f9; padding: 10px; border-radius: 5px; }
-        #modal-task-files li { margin-bottom: 5px; }
-    </style>
+    <!-- Chính: style file (thay file này bằng nội dung CSS đính kèm bên dưới) -->
+    <link rel="stylesheet" href="public/css/group_details.css">
+
+    <!-- Giữ lại style cũ chỉ khi cần: (không cần) -->
 </head>
 <body>
-    <header>
-        <h1><?php echo htmlspecialchars($group['group_name']); ?></h1>
-        <nav>
-            <a href="index.php?page=groups">Quay lại Danh sách nhóm</a>
-            <a href="index.php?action=logout">Đăng Xuất</a>
+    <!-- Background gradient overlay -->
+    <div class="bg-overlay"></div>
+
+    <!-- Header -->
+    <header class="topbar">
+        <div class="topbar-left">
+            <h1 class="group-title"><?php echo htmlspecialchars($group['group_name']); ?></h1>
+            <p class="group-sub">Trang quản lý nhóm — collaborative</p>
+        </div>
+        <nav class="topnav">
+            <a href="index.php?page=dashboard">🏠 Trang chủ</a>
+            <a href="index.php?page=profile">👤 Hồ sơ</a>
+            <a href="index.php?page=groups">👥 Nhóm</a>
+            <a href="index.php?page=groups">📚 Danh sách nhóm</a>
+            <a href="index.php?action=logout" class="logout">🚪 Đăng xuất</a>
         </nav>
     </header>
 
     <main class="container">
-        
         <?php
         if (isset($_SESSION['flash_message'])) {
             echo '<div class="flash-message">' . $_SESSION['flash_message'] . '</div>';
@@ -75,40 +48,83 @@ if (!isset($_SESSION['user_id'])) {
         }
         ?>
 
-        <div style="display: flex; gap: 20px;">
-            <section class="function-placeholder form-container" style="flex: 1;">
+        <!-- Top panels: Invite + Create Task -->
+        <section class="top-grid">
+            <div class="card invite-card">
                 <h2>Mời thành viên mới</h2>
-                <form action="index.php?action=invite_member" method="POST">
+                <form action="index.php?action=invite_member" method="POST" class="form-inline">
                     <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
-                    <div class="form-group"><label for="email_or_username">Nhập Email hoặc Username:</label><input type="text" id="email_or_username" name="email_or_username"></div>
+                    <label for="email_or_username" class="sr-only">Email hoặc Username</label>
+                    <input type="text" id="email_or_username" name="email_or_username" placeholder="Nhập email hoặc username..." />
                     <button type="submit" class="btn">Gửi Lời Mời</button>
                 </form>
-            </section>
-            <section class="function-placeholder form-container" style="flex: 2;">
+            </div>
+
+            <div class="card task-create-card">
                 <h2>Tạo công việc mới</h2>
-                <form action="index.php?action=create_task" method="POST">
+                <form action="index.php?action=create_task" method="POST" class="task-form">
                     <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
-                    <div class="form-group"><label for="task_title">Tiêu đề:</label><input type="text" id="task_title" name="task_title" required></div>
-                    <div class="form-group"><label for="task_description">Mô tả:</label><textarea id="task_description" name="task_description" rows="2"></textarea></div>
-                    <div style="display: flex; gap: 10px;">
-                        <div class="form-group" style="flex: 1;"><label for="priority">Ưu tiên:</label><select id="priority" name="priority"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option><option value="critical">Critical</option></select></div>
-                        <div class="form-group" style="flex: 1;"><label for="assigned_to_user_id">Giao cho:</label><select id="assigned_to_user_id" name="assigned_to_user_id"><option value="">-- Không giao --</option><?php foreach ($members as $member): ?><option value="<?php echo $member['user_id']; ?>"><?php echo htmlspecialchars($member['username']); ?></option><?php endforeach; ?></select></div>
-                        <div class="form-group" style="flex: 1;"><label for="due_date">Hết hạn:</label><input type="date" id="due_date" name="due_date"></div>
-                        <div class="form-group" style="flex: 1;"><label for="points">Điểm:</label><input type="number" id="points" name="points" value="0" min="0"></div>
+                    <div class="row">
+                        <div class="col">
+                            <label for="task_title">Tiêu đề</label>
+                            <input type="text" id="task_title" name="task_title" required>
+                        </div>
+                        <div class="col">
+                            <label for="priority">Ưu tiên</label>
+                            <select id="priority" name="priority">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                                <option value="critical">Critical</option>
+                            </select>
+                        </div>
                     </div>
-                    <button type="submit" class="btn">Tạo Task</button>
+
+                    <div class="row">
+                        <div class="col-2">
+                            <label for="task_description">Mô tả</label>
+                            <textarea id="task_description" name="task_description" rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col">
+                            <label for="assigned_to_user_id">Giao cho</label>
+                            <select id="assigned_to_user_id" name="assigned_to_user_id">
+                                <option value="">-- Không giao --</option>
+                                <?php foreach ($members as $member): ?>
+                                    <option value="<?php echo $member['user_id']; ?>"><?php echo htmlspecialchars($member['username']); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label for="due_date">Hết hạn</label>
+                            <input type="date" id="due_date" name="due_date">
+                        </div>
+                        <div class="col">
+                            <label for="points">Điểm</label>
+                            <input type="number" id="points" name="points" value="0" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Tạo Task</button>
+                    </div>
                 </form>
-            </section>
-        </div>
+            </div>
+        </section>
 
-        <hr>
+        <!-- Middle: Chat + Polls -->
+        <section class="mid-grid">
+            <div class="card chat-card" id="chat">
+                <div class="card-head">
+                    <h2>Chat Nhóm</h2>
+                    <small class="muted">Realtime / chia sẻ file</small>
+                </div>
 
-        <div style="display: flex; gap: 20px;">
-            <section class="function-placeholder" style="flex: 2;" id="chat">
-                <h2>Chat Nhóm</h2>
-                <div id="chat-box">
+                <div id="chat-box" class="chat-box">
                     <?php if (empty($messages)): ?>
-                        <p>Chưa có tin nhắn nào.</p>
+                        <p class="muted">Chưa có tin nhắn nào.</p>
                     <?php else: ?>
                         <?php foreach ($messages as $msg): ?>
                             <?php 
@@ -116,43 +132,50 @@ if (!isset($_SESSION['user_id'])) {
                             $isFileClass = !empty($msg['file_id']) ? 'is-file' : '';
                             ?>
                             <div class="chat-message <?php echo $isUserClass; ?> <?php echo $isFileClass; ?>">
-                                <strong><?php echo htmlspecialchars($msg['sender_name']); ?>:</strong>
-                                <?php if (!empty($msg['file_id'])): ?>
-                                    <p>Đã gửi một file: <a href="<?php echo htmlspecialchars($msg['file_path']); ?>" target="_blank"><?php echo htmlspecialchars($msg['file_name']); ?></a></p>
-                                <?php else: ?>
-                                    <p><?php echo htmlspecialchars($msg['message_content']); ?></p>
-                                <?php endif; ?>
-                                <small><?php echo date('d/m H:i', strtotime($msg['created_at'])); ?></small>
+                                <div class="chat-meta">
+                                    <div class="avatar"><?php echo strtoupper(substr($msg['sender_name'],0,1)); ?></div>
+                                    <div class="meta-text">
+                                        <strong><?php echo htmlspecialchars($msg['sender_name']); ?></strong>
+                                        <small class="time"><?php echo date('d/m H:i', strtotime($msg['created_at'])); ?></small>
+                                    </div>
+                                </div>
+
+                                <div class="chat-body">
+                                    <?php if (!empty($msg['file_id'])): ?>
+                                        <p class="file-line">Đã gửi một file: <a href="<?php echo htmlspecialchars($msg['file_path']); ?>" target="_blank"><?php echo htmlspecialchars($msg['file_name']); ?></a></p>
+                                    <?php else: ?>
+                                        <p><?php echo htmlspecialchars($msg['message_content']); ?></p>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
-                
-                <div id="chat-controls">
+
+                <div id="chat-controls" class="chat-controls">
                     <form id="hidden-file-form" action="index.php?action=send_file" method="POST" enctype="multipart/form-data">
                         <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
                         <input type="file" name="group_file" id="group_file_input" onchange="this.form.submit()" title="Đính kèm file">
                     </form>
-                    <button id="file-upload-btn" class="btn" onclick="document.getElementById('group_file_input').click();" title="Đính kèm file">📎</button>
-                    <form id="chat-form" action="index.php?action=send_message" method="POST">
+
+                    <button id="file-upload-btn" class="btn-icon" onclick="document.getElementById('group_file_input').click();" title="Đính kèm file">📎</button>
+
+                    <form id="chat-form" action="index.php?action=send_message" method="POST" class="chat-form">
                         <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
                         <input type="text" name="message_content" placeholder="Gõ tin nhắn của bạn..." required autocomplete="off">
-                        <button type="submit" class="btn">Gửi</button>
+                        <button type="submit" class="btn btn-primary">Gửi</button>
                     </form>
                 </div>
-            </section>
-            
-            <section class="function-placeholder" style="flex: 1;" id="polls">
+            </div>
+
+            <aside class="card poll-card" id="polls">
                 <h2>Bình chọn</h2>
-                
-                <div class="form-container" style="background-color: #f9f9f9; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+
+                <div class="poll-create">
                     <form action="index.php?action=create_poll" method="POST">
                         <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
-                        <div class="form-group">
-                            <label for="poll_question">Câu hỏi:</label>
-                            <input type="text" name="poll_question" id="poll_question" required>
-                        </div>
-                        <div class="form-group"><label>Các lựa chọn:</label>
+                        <input type="text" name="poll_question" id="poll_question" placeholder="Câu hỏi..." required>
+                        <div class="poll-options">
                             <input type="text" name="options[]" placeholder="Lựa chọn 1" required>
                             <input type="text" name="options[]" placeholder="Lựa chọn 2">
                             <input type="text" name="options[]" placeholder="Lựa chọn 3">
@@ -161,14 +184,16 @@ if (!isset($_SESSION['user_id'])) {
                     </form>
                 </div>
 
-                <div id="poll-list" style="max-height: 350px; overflow-y: auto;">
+                <div id="poll-list" class="poll-list">
                     <?php if (empty($polls)): ?>
-                        <p>Chưa có bình chọn nào.</p>
+                        <p class="muted">Chưa có bình chọn nào.</p>
                     <?php else: ?>
                         <?php foreach ($polls as $poll): ?>
                             <div class="poll-container" id="poll-<?php echo $poll['poll_id']; ?>">
-                                <strong><?php echo htmlspecialchars($poll['poll_question']); ?></strong>
-                                <small>(Bởi: <?php echo htmlspecialchars($poll['creator_name']); ?>)</small>
+                                <div class="poll-head">
+                                    <strong><?php echo htmlspecialchars($poll['poll_question']); ?></strong>
+                                    <small class="muted">(Bởi: <?php echo htmlspecialchars($poll['creator_name']); ?>)</small>
+                                </div>
                                 <form action="index.php?action=submit_vote" method="POST">
                                     <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
                                     <input type="hidden" name="poll_id" value="<?php echo $poll['poll_id']; ?>">
@@ -193,19 +218,21 @@ if (!isset($_SESSION['user_id'])) {
                                             </label>
                                         </div>
                                     <?php endforeach; ?>
-                                    <button type="submit" class="btn btn-small">Bầu chọn</button>
+                                    <div style="margin-top:8px;">
+                                        <button type="submit" class="btn btn-small">Bầu chọn</button>
+                                    </div>
                                 </form>
                             </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
-            </section>
-        </div>
+            </aside>
+        </section>
 
-        <hr>
-
-        <section class="kanban-board-container">
+        <!-- Kanban -->
+        <section class="kanban-section">
             <h2>Bảng công việc (Kanban)</h2>
+
             <?php
             // Định nghĩa $columns để tránh lỗi
             $columns = ['backlog' => [], 'in_progress' => [], 'review' => [], 'done' => []];
@@ -222,9 +249,11 @@ if (!isset($_SESSION['user_id'])) {
                         <?php if (is_array($tasks_in_column)): ?>
                             <?php foreach ($tasks_in_column as $task): ?>
                                 <div class="task-card" data-task-id="<?php echo $task['task_id']; ?>">
-                                    <strong><?php echo htmlspecialchars($task['task_title']); ?></strong>
-                                    <p class="priority priority-<?php echo $task['priority']; ?>"><?php echo ucfirst($task['priority']); ?></p>
-                                    <p>Giao cho: <?php echo htmlspecialchars($task['assignee_name'] ?? 'Chưa có'); ?></p>
+                                    <div class="task-head">
+                                        <strong><?php echo htmlspecialchars($task['task_title']); ?></strong>
+                                        <span class="priority priority-<?php echo $task['priority']; ?>"><?php echo ucfirst($task['priority']); ?></span>
+                                    </div>
+                                    <p class="task-meta">Giao cho: <?php echo htmlspecialchars($task['assignee_name'] ?? 'Chưa có'); ?></p>
                                 </div>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -232,35 +261,29 @@ if (!isset($_SESSION['user_id'])) {
                 <?php endforeach; ?>
             </div>
         </section>
-        
-        <hr>
 
-        <div class="group-functions" style="display: flex; gap: 20px;">
-            <div class="function-placeholder" style="flex: 1;">
-                <h2>Đánh giá thành viên</h2>
+        <!-- bottom quick links -->
+        <section class="quick-links">
+            <div class="card">
+                <h3>Đánh giá thành viên</h3>
                 <p>Đánh giá hiệu suất của các thành viên trong nhóm.</p>
-                <a href="index.php?page=group_rubric&group_id=<?php echo $group['group_id']; ?>" class="btn">
-                    Đi đến trang Đánh giá
-                </a>
+                <a href="index.php?page=group_rubric&group_id=<?php echo $group['group_id']; ?>" class="btn">Đi đến trang Đánh giá</a>
             </div>
-            <div class="function-placeholder" style="flex: 1;">
-                <h2>Họp nhóm</h2>
+            <div class="card">
+                <h3>Họp nhóm</h3>
                 <p>Nơi đặt lịch họp và xem biên bản họp.</p>
-                <a href="index.php?page=group_meetings&group_id=<?php echo $group['group_id']; ?>" class="btn">
-                    Quản lý Họp
-                </a>
+                <a href="index.php?page=group_meetings&group_id=<?php echo $group['group_id']; ?>" class="btn">Quản lý Họp</a>
             </div>
-            <div class="function-placeholder" style="flex: 1;">
-                <h2>Báo cáo & Thống kê</h2>
+            <div class="card">
+                <h3>Báo cáo & Thống kê</h3>
                 <p>Xem biểu đồ tiến độ và điểm đóng góp của nhóm.</p>
-                <a href="index.php?page=group_report&group_id=<?php echo $group['group_id']; ?>" class="btn">
-                    Xem Báo Cáo
-                </a>
+                <a href="index.php?page=group_report&group_id=<?php echo $group['group_id']; ?>" class="btn">Xem Báo Cáo</a>
             </div>
-        </div>
+        </section>
 
     </main>
 
+    <!-- Modal (giữ nguyên id + structure để JS hiện modal) -->
     <div id="task-details-modal" class="modal">
         <div class="modal-content">
             <span class="modal-close" id="modal-close-btn">&times;</span>
@@ -277,25 +300,22 @@ if (!isset($_SESSION['user_id'])) {
 
             <hr>
             <h3>Tài liệu đính kèm</h3>
-            <ul id="modal-task-files">
-                </ul>
+            <ul id="modal-task-files"></ul>
             
-            <form action="index.php?action=attach_file_to_task" method="POST" enctype="multipart/form-data" style="display: flex; gap: 10px;">
+            <form action="index.php?action=attach_file_to_task" method="POST" enctype="multipart/form-data" class="file-attach-form">
                 <input type="hidden" name="task_id" id="modal-file-task-id" value="">
                 <input type="hidden" name="group_id" id="modal-file-group-id" value="<?php echo $group['group_id']; ?>">
-                
-                <input type="file" name="task_file" required style="flex: 1;">
+                <input type="file" name="task_file" required>
                 <button type="submit" class="btn btn-small">Đính kèm</button>
             </form>
 
             <hr>
             <h3>Bình luận</h3>
-            <div id="task-details-comments">
-                </div>
-            <form id="add-comment-form">
+            <div id="task-details-comments" class="comments-box"></div>
+            <form id="add-comment-form" class="comment-form">
                 <input type="hidden" id="modal-comment-task-id" name="task_id">
                 <div class="form-group">
-                    <label for="comment_text">Viết bình luận:</label>
+                    <label for="comment_text" class="sr-only">Viết bình luận</label>
                     <textarea id="comment_text" name="comment_text" rows="2" required></textarea>
                 </div>
                 <button type="submit" class="btn">Gửi</button>
@@ -303,6 +323,7 @@ if (!isset($_SESSION['user_id'])) {
         </div>
     </div>
 
+    <!-- Sortable + main script (giữ nguyên) -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -443,3 +464,4 @@ if (!isset($_SESSION['user_id'])) {
     </script>
 </body>
 </html>
+        

@@ -1,10 +1,8 @@
 <?php
-// app/views/group_report.php
 if (!isset($_SESSION['user_id'])) {
     header('Location: index.php?page=login');
     exit;
 }
-// $group, $chartUrl, $contributionData được truyền từ ReportController
 ?>
 
 <!DOCTYPE html>
@@ -13,79 +11,56 @@ if (!isset($_SESSION['user_id'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Báo cáo - <?php echo htmlspecialchars($group['group_name']); ?></title>
-    <link rel="stylesheet" href="public/css/style.css">
-    <style>
-        .report-grid {
-            display: flex;
-            gap: 20px;
-        }
-        .chart-container {
-            flex: 1;
-            background-color: #f9f9f9;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-        }
-        .chart-container img {
-            max-width: 100%;
-            height: auto;
-        }
-        .score-table-container {
-            flex: 2;
-        }
-        .score-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .score-table th, .score-table td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-        }
-        .score-table th { background-color: #f4f4f4; }
-    </style>
+    <link rel="stylesheet" href="public/css/report.css">
 </head>
 <body>
-    <header>
-        <h1>Báo cáo: <?php echo htmlspecialchars($group['group_name']); ?></h1>
+    <div class="background"></div>
+
+    <header class="dashboard-header">
+        <h1 class="logo">Báo cáo nhóm <span><?php echo htmlspecialchars($group['group_name']); ?></span></h1>
         <nav>
-            <a href="index.php?page=group_details&id=<?php echo $group['group_id']; ?>">Quay lại Chi tiết nhóm</a>
-            <a href="index.php?action=logout">Đăng Xuất</a>
+            <a href="index.php?page=dashboard">Trang Chủ</a>
+            <a href="index.php?page=profile">Hồ Sơ</a>
+            <a href="index.php?page=groups">Quản Lý Nhóm</a>
+            <a href="index.php?page=group_details&id=<?php echo $group['group_id']; ?>">Chi Tiết Nhóm</a>
+            <a href="index.php?action=logout" class="btn-logout">Đăng Xuất</a>
         </nav>
     </header>
 
-    <main class="container">
+    <main class="report-container">
+        <section class="report-header">
+            <h2>📊 Báo cáo tổng quan nhóm</h2>
+            <p>Phân tích tiến độ và đóng góp của từng thành viên</p>
+        </section>
 
         <div class="report-grid">
-            
+
             <aside class="chart-container">
-                <h2>Tiến độ Nhóm</h2>
+                <h3>Tiến độ nhóm</h3>
                 <img src="<?php echo $chartUrl; ?>" alt="Biểu đồ tiến độ công việc">
             </aside>
 
             <section class="score-table-container">
-                <h2>Điểm Đóng Góp Thành Viên</h2>
+                <h3>Điểm đóng góp thành viên</h3>
                 <table class="score-table">
                     <thead>
                         <tr>
-                            <th>Thành viên</th>
-                            <th>Điểm Task (từ Kanban)</th>
-                            <th>Điểm Đánh giá (từ Rubric)</th>
+                            <th>👤 Thành viên</th>
+                            <th>📈 Điểm Task</th>
+                            <th>⭐ Điểm Đánh giá</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($contributionData as $member): ?>
                             <tr>
                                 <td><?php echo htmlspecialchars($member['username']); ?></td>
-                                
-                                <td><?php echo (int)$member['total_task_points']; ?> điểm</td>
-                                
+                                <td><?php echo number_format($member['total_task_points'] ?? 0, 1); ?> điểm</td>
                                 <td>
                                     <?php 
                                     if ($member['avg_rubric_score']) {
                                         echo number_format($member['avg_rubric_score'], 2) . " / 4.0";
                                     } else {
-                                        echo "Chưa được đánh giá";
+                                        echo "Chưa đánh giá";
                                     }
                                     ?>
                                 </td>
@@ -93,8 +68,11 @@ if (!isset($_SESSION['user_id'])) {
                         <?php endforeach; ?>
                     </tbody>
                 </table>
-                <small>* Điểm Task = Tổng điểm từ các task ở cột "Done".</small><br>
-                <small>* Điểm Đánh giá = Điểm trung bình từ các lần đánh giá (Rubric).</small>
+
+                <div class="note">
+                    <p>💡 <strong>Điểm Task</strong>: Tổng điểm các công việc được giao (Done: 100%, Review: 60%, In Progress: 30%, Backlog: 0%).</p>
+                    <p>⭐ <strong>Điểm Đánh giá</strong>: Trung bình điểm từ các lần được đánh giá (Rubric).</p>
+                </div>
             </section>
 
         </div>

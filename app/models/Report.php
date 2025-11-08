@@ -10,7 +10,7 @@ class Report {
 
     /**
      * 1. LẤY DỮ LIỆU TIẾN ĐỘ TASK (cho Biểu đồ)
-     * Đếm số lượng task trong mỗi trạng thái
+     * (Giữ nguyên)
      */
     public function getTaskProgress($group_id) {
         $sql = "SELECT status, COUNT(task_id) as count
@@ -21,7 +21,6 @@ class Report {
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$group_id]);
         
-        // Chuyển đổi kết quả thành mảng ['backlog' => 5, 'done' => 2, ...]
         $progress = [
             'backlog' => 0,
             'in_progress' => 0,
@@ -37,25 +36,33 @@ class Report {
     }
 
     /**
-     * 2. LẤY BẢNG ĐIỂM ĐÓNG GÓP (cho Bảng)
-     * Lấy 2 loại điểm cho mỗi thành viên:
-     * - Điểm Task: SUM(points) từ các task 'done'
-     * - Điểm Rubric: AVG(total_score) từ các đánh giá
+     * 2. LẤY BẢNG ĐIỂM ĐÓNG GÓP (ĐÃ NÂNG CẤP)
+     * Tính điểm Task theo % tiến độ:
+     * - Done: 100%
+     * - Review: 60%
+     * - In Progress: 30%
+     * - Backlog: 0%
      */
     public function getContributionScores($group_id) {
-        // Lấy tất cả thành viên trong nhóm
+        
         $sql = "SELECT 
                     u.user_id, 
                     u.username,
                     
-                    -- Lấy tổng điểm từ task (chỉ tính task 'done')
-                    (SELECT SUM(t.points) 
+                    -- NÂNG CẤP LOGIC TÍNH ĐIỂM TASK
+                    (SELECT SUM(
+                        CASE 
+                            WHEN t.status = 'done' THEN t.points * 1.0
+                            WHEN t.status = 'review' THEN t.points * 0.6 
+                            WHEN t.status = 'in_progress' THEN t.points * 0.3
+                            ELSE 0 
+                        END
+                     ) 
                      FROM tasks t 
                      WHERE t.assigned_to_user_id = u.user_id 
-                       AND t.status = 'done' 
                        AND t.group_id = gm.group_id) AS total_task_points,
                     
-                    -- Lấy điểm trung bình từ Rubric
+                    -- Lấy điểm trung bình từ Rubric (Giữ nguyên)
                     (SELECT AVG(e.total_score) 
                      FROM evaluations e 
                      WHERE e.evaluated_user_id = u.user_id 

@@ -1,610 +1,124 @@
-/*
- * STUDENT GROUP COLLABORATION APP - STYLE.CSS (Phiên bản "Reskin")
- * Phong cách Microsoft Teams áp dụng cho cấu trúc HTML hiện có.
- *
- * Cấu trúc file:
- * 1. Global & Variables (Biến toàn cục & Reset)
- * 2. Layout (Header, Main Container)
- * 3. Auth (Đăng nhập, Đăng ký)
- * 4. Components (Nút, Form, Card, Modal, Table)
- * 5. Feature-Specific (Kanban, Chat, Poll, Report...)
- * 6. Utility Classes
- */
+/* =============================
+   STUDENT GROUP DASHBOARD v2.0
+   Theme: Neo Glass (Tím - Xanh)
+============================= */
 
-/* ------------------------------------------- */
-/* 1. GLOBAL & VARIABLES
-/* ------------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
 :root {
-    /* Màu sắc thương hiệu (Teams) */
-    --color-brand-purple: #6264A7;
-    --color-brand-purple-dark: #464775;
-    --color-brand-purple-light: #EAEAF4; /* Dùng cho tin nhắn của user */
-
-    /* Nền (Backgrounds) */
-    --color-body-bg: #F3F2F1;        /* Nền xám nhạt (giống Teams) */
-    --color-header-bg: #33344A;       /* Nền tối cho header (giống sidebar Teams) */
-    --color-content-bg: #FFFFFF;     /* Nền trắng cho card, form, modal */
-    
-    /* Văn bản (Text) */
-    --color-text-primary: #1F1F1F;      /* Gần đen */
-    --color-text-secondary: #605E5C;   /* Xám cho text phụ */
-    --color-text-on-dark: #FFFFFF;    /* Chữ trắng trên nền header */
-    --color-text-link: #5B5FC7;        /* Màu link */
-    --color-accept: #107C10;
-    --color-reject: #A80000;
-
-    /* Khác */
-    --border-color: #E1DFDD;
-    --border-radius-sm: 4px;
-    --border-radius-md: 6px;
-    --border-radius-lg: 8px;
-    --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.05);
-    --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --color-primary: #6a11cb;
+  --color-secondary: #2575fc;
+  --color-bg: #f5f7ff;
+  --color-text: #1a1a1a;
+  --radius: 16px;
+  --shadow: 0 8px 30px rgba(0,0,0,0.1);
+  --transition: all 0.3s ease;
 }
 
-/* Reset CSS cơ bản */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
+/* ========== GLOBAL ========== */
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    color: var(--color-text-primary);
-    background-color: var(--color-body-bg); /* Nền xám nhạt */
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #e9eeff, #f6f0ff);
+  color: var(--color-text);
+  min-height: 100vh;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-a {
-    color: var(--color-text-link);
-    text-decoration: none;
-}
-a:hover {
-    text-decoration: underline;
-}
-
-h1, h2, h3, h4, h5, h6 {
-    font-weight: 600;
-    margin-bottom: 0.75rem;
-}
-
-hr {
-    border: none;
-    border-top: 1px solid var(--border-color);
-    margin: 2rem 0;
-}
-
-/* ------------------------------------------- */
-/* 2. LAYOUT (Header, Main Container)
-/* ------------------------------------------- */
-
-/* Style cho <header> chung của các trang */
+/* ========== HEADER ========== */
 header {
-    background-color: var(--color-header-bg);
-    color: var(--color-text-on-dark);
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0;
+  backdrop-filter: blur(16px);
+  background: rgba(255,255,255,0.25);
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  box-shadow: var(--shadow);
+  z-index: 10;
 }
 
 header h1 {
-    color: var(--color-text-on-dark);
-    margin: 0;
-    font-size: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
 }
 
-header nav {
-    display: flex;
-    gap: 1.5rem;
+nav a {
+  color: #333;
+  margin: 0 1rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: var(--transition);
+}
+nav a:hover {
+  color: var(--color-secondary);
 }
 
-header nav a {
-    color: var(--color-text-on-dark);
-    opacity: 0.9;
-    font-weight: 500;
-    text-decoration: none;
-    transition: opacity 0.2s;
+/* ========== MAIN ========== */
+main {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: auto;
+  display: grid;
+  gap: 2rem;
 }
 
-header nav a:hover {
-    opacity: 1;
-    text-decoration: underline;
+/* ========== CARDS ========== */
+.card {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(18px);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+}
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.15);
 }
 
-/* Style cho <main class="container"> (trang group_details, groups...) */
-main.container, main.profile-container {
-    max-width: 1200px;
-    margin: 2rem auto;
-    padding: 0 1.5rem;
-}
-
-/* ------------------------------------------- */
-/* 3. AUTH (login.php, register.php)
-/* ------------------------------------------- */
-
-/* Container cho trang đăng nhập/đăng ký */
-.auth-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    background-color: var(--color-body-bg);
-}
-
-/* Thẻ (Card) chứa form (chính là .auth-container) */
-.auth-container form {
-    background: var(--color-content-bg);
-    padding: 2.5rem 2rem;
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-medium);
-    width: 100%;
-    max-width: 420px;
-}
-
-.auth-container h2 {
-    text-align: center;
-    margin-bottom: 1.5rem;
-}
-
-.auth-container .form-group {
-    margin-bottom: 1.25rem;
-}
-
-.auth-container .btn {
-    width: 100%; /* Nút full-width */
-    margin-top: 1rem;
-}
-
-.auth-container p {
-    margin-top: 1.5rem;
-    font-size: 0.9rem;
-}
-
-/* ------------------------------------------- */
-/* 4. COMPONENTS (Nút, Form, Card, Modal, Table)
-/* ------------------------------------------- */
-
-/* ----- Buttons (Nút bấm) ----- */
+/* ========== BUTTONS ========== */
 .btn {
-    display: inline-block;
-    padding: 0.6rem 1.2rem;
-    font-size: 0.9rem;
-    font-weight: 600;
-    line-height: 1.2;
-    text-align: center;
-    vertical-align: middle;
-    cursor: pointer;
-    border: 1px solid transparent;
-    border-radius: var(--border-radius-sm);
-    transition: all 0.2s ease-in-out;
-    background-color: var(--color-brand-purple);
-    color: var(--color-text-on-dark);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  border: none;
+  color: white;
+  padding: 0.8rem 1.4rem;
+  border-radius: var(--radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 4px 12px rgba(106,17,203,0.3);
 }
-
 .btn:hover {
-    background-color: var(--color-brand-purple-dark);
-    text-decoration: none;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(37,117,252,0.35);
 }
 
-/* Nút phụ (ví dụ: Hủy) */
-.btn-secondary {
-    background-color: #E1DFDD;
-    color: var(--color-text-primary);
-    border-color: #E1DFDD;
+/* ========== FORMS ========== */
+input, select, textarea {
+  width: 100%;
+  padding: 0.6rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.1);
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(8px);
+  transition: var(--transition);
 }
-.btn-secondary:hover {
-    background-color: #C8C6C4;
-    border-color: #C8C6C4;
-}
-
-/* Nút chấp nhận (groups.php) */
-.btn-accept {
-    background-color: var(--color-accept);
-    color: #fff;
-}
-.btn-accept:hover {
-    background-color: #0c6b0c;
+input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(106,17,203,0.15);
+  outline: none;
 }
 
-/* Nút từ chối (groups.php) */
-.btn-reject {
-    background-color: var(--color-text-secondary);
-    color: #fff;
-}
-.btn-reject:hover {
-    background-color: var(--color-reject);
-}
-
-
-/* ----- Forms (Chung) ----- */
-.form-group {
-    margin-bottom: 1rem;
-}
-
-.form-group label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-}
-
-/* Style chung cho tất cả input, select, textarea */
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="date"],
-input[type="number"],
-select,
-textarea {
-    display: block;
-    width: 100%;
-    padding: 0.6rem 0.75rem;
-    font-size: 0.9rem;
-    line-height: 1.5;
-    color: var(--color-text-primary);
-    background-color: var(--color-content-bg);
-    background-clip: padding-box;
-    border: 1px solid #C8C6C4;
-    border-radius: var(--border-radius-sm);
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-}
-
-input[type="text"]:focus,
-input[type="email"]:focus,
-input[type="password"]:focus,
-input[type="date"]:focus,
-input[type="number"]:focus,
-select:focus,
-textarea:focus {
-    color: var(--color-text-primary);
-    background-color: var(--color-content-bg);
-    border-color: var(--color-brand-purple);
-    outline: 0;
-    box-shadow: 0 0 0 2px var(--color-brand-purple-light);
-}
-
-textarea {
-    min-height: 100px;
-    resize: vertical;
-}
-
-/* ----- Cards (Dùng cho .form-container, .list-container...) ----- */
-.form-container,
-.function-placeholder,
-.invitations-container,
-.list-container,
-.profile-container,
-.chart-container,
-.score-table-container,
-.meeting-info {
-    background-color: var(--color-content-bg);
-    border-radius: var(--border-radius-lg);
-    padding: 1.5rem;
-    box-shadow: var(--shadow-light);
-    margin-bottom: 1.5rem;
-}
-
-/* ----- Modal (Popup) ----- */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.5); /* Nền mờ */
-    
-    /* Canh giữa */
-    display: none; /* JS sẽ đổi thành flex */
-    align-items: center;
-    justify-content: center;
-}
-
-.modal-content {
-    background-color: var(--color-content-bg);
-    margin: auto; /* Tự động canh giữa */
-    padding: 1.5rem 2rem;
-    border: 1px solid #888;
-    width: 90%;
-    max-width: 600px; /* Giới hạn chiều rộng */
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-medium);
-    position: relative;
-}
-
-.modal-close {
-    color: var(--color-text-secondary);
-    position: absolute;
-    top: 1rem;
-    right: 1.5rem;
-    font-size: 2rem;
-    font-weight: bold;
-    cursor: pointer;
-    line-height: 1;
-}
-.modal-close:hover {
-    color: var(--color-text-primary);
-}
-
-
-/* ----- Tables (.rubric-table, .score-table) ----- */
-.rubric-table,
-.score-table {
-    width: 100%;
-    border-collapse: collapse;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-lg);
-    overflow: hidden; /* Giữ bo góc cho table */
-}
-.rubric-table th, .rubric-table td,
-.score-table th, .score-table td {
-    border: 1px solid var(--border-color);
-    padding: 0.75rem 1rem;
-    text-align: left;
-}
-.rubric-table th,
-.score-table th {
-    background-color: var(--color-body-bg); /* Nền xám nhạt */
-}
-
-/* ----- Lists (.group-list, .invitation-list) ----- */
-.group-list, .invitation-list {
-    list-style: none;
-    padding: 0;
-}
-.group-list li, .invitation-list li {
-    background: var(--color-content-bg);
-    padding: 1.25rem;
-    margin-bottom: 1rem;
-    border-radius: var(--border-radius-md);
-    box-shadow: var(--shadow-light);
-    border: 1px solid var(--border-color);
-}
-.invitation-list li .invite-actions {
-    margin-top: 0.75rem;
-    display: flex;
-    gap: 0.5rem;
-}
-
-/* ----- Flash Message ----- */
-.flash-message {
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-    border-radius: var(--border-radius-md);
-    background-color: var(--color-brand-purple-light);
-    color: var(--color-brand-purple-dark);
-    font-weight: 500;
-    border: 1px solid var(--color-brand-purple);
-}
-
-/* ------------------------------------------- */
-/* 5. FEATURE-SPECIFIC (Kanban, Chat, Poll...)
-/* ------------------------------------------- */
-
-/* ----- Kanban (group_details.php) ----- */
-.kanban-board {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    overflow-x: auto; /* Cho phép cuộn ngang */
-    padding-bottom: 1rem;
-}
-
-.kanban-column {
-    width: 280px; /* Chiều rộng cố định */
-    flex-shrink: 0; /* Không co lại */
-    background-color: var(--color-body-bg); /* Nền xám nhạt */
-    border-radius: var(--border-radius-lg);
-    padding: 1rem;
-    min-height: 300px;
-}
-
-.kanban-column h3 {
-    margin-top: 0;
-    padding-bottom: 0.75rem;
-    border-bottom: 2px solid var(--border-color);
-    font-size: 1.1rem;
-}
-
-.task-card {
-    background-color: var(--color-content-bg); /* Nền trắng */
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-md);
-    padding: 1rem;
-    margin-bottom: 0.75rem;
-    box-shadow: var(--shadow-light);
-    cursor: grab;
-}
-.task-card:active {
-    cursor: grabbing;
-}
-
-.task-card p {
-    margin: 5px 0;
-    font-size: 0.85rem;
-    color: var(--color-text-secondary);
-}
-
-.task-card .priority {
-    font-weight: bold;
-    padding: 2px 8px;
-    border-radius: 10px;
-    display: inline-block;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    color: #fff;
-}
-.priority-critical { background-color: #D83B01; }
-.priority-high { background-color: #F0B900; }
-.priority-medium { background-color: var(--color-brand-purple); }
-.priority-low { background-color: var(--color-text-secondary); }
-
-
-/* ----- Chat (group_details.php) ----- */
-#chat-box {
-    height: 400px;
-    overflow-y: auto;
-    border: 1px solid var(--border-color);
-    background-color: var(--color-content-bg); /* Nền trắng */
-    padding: 1rem;
-    border-radius: var(--border-radius-md);
-    margin-bottom: 1rem;
-    display: flex;
-    flex-direction: column; /* Để tin nhắn align-self hoạt động */
-}
-
-.chat-message {
-    margin-bottom: 1rem;
-    padding: 0.6rem 1rem;
-    border-radius: var(--border-radius-md);
-    background-color: var(--color-body-bg); /* Tin nhắn người khác (xám nhạt) */
-    max-width: 80%;
-    word-wrap: break-word;
-    align-self: flex-start;
-}
-
-.chat-message.is-user {
-    background-color: var(--color-brand-purple-light); /* Tin nhắn của mình (tím nhạt) */
-    color: #252423;
-    align-self: flex-end; /* Quan trọng */
-    margin-left: auto;
-}
-
-.chat-message.is-file p a {
-    font-weight: bold;
-    color: var(--color-text-link);
-}
-
-.chat-message small {
-    font-size: 0.75rem;
-    color: var(--color-text-secondary);
-    display: block;
-    margin-top: 4px;
-}
-
-#chat-controls {
-    display: flex;
-    gap: 10px;
-}
-#chat-form {
-    flex: 1;
-    display: flex;
-}
-/* Input chat phải liền với nút Gửi */
-#chat-form input[type="text"] {
-    flex: 1;
-    border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm);
-    border-right: none;
-}
-#chat-form button {
-    border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
-}
-/* Nút file upload */
-#file-upload-btn {
-    flex-shrink: 0;
-    width: 45px;
-    padding: 0.6rem;
-    font-size: 1.2em;
-    background-color: #E1DFDD;
-    color: var(--color-text-primary);
-}
-#file-upload-btn:hover {
-    background-color: #C8C6C4;
-}
-
-/* ----- Polls (group_details.php) ----- */
-.poll-container {
-    border: 1px solid var(--border-color);
-    padding: 1rem;
-    border-radius: var(--border-radius-md);
-    margin-bottom: 1rem;
-    background-color: var(--color-content-bg);
-}
-
-.poll-option {
-    margin: 5px 0;
-    position: relative;
-    padding: 5px;
-    border-radius: 3px;
-    background-color: #f9f9f9;
-}
-
-.poll-option label {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    cursor: pointer;
-    position: relative;
-    z-index: 2; /* Nằm trên vote-bar */
-}
-.poll-option .vote-count {
-    font-weight: bold;
-}
-/* Thanh kết quả */
-.poll-option .vote-bar {
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    background-color: var(--color-brand-purple-light); /* Màu tím nhạt */
-    z-index: 1;
-    opacity: 0.7;
-    border-radius: 3px;
-}
-
-/* ----- Star Rating (meeting_details.php) ----- */
-.rating-stars {
-    display: flex;
-    flex-direction: row-reverse;
-    justify-content: flex-end;
-}
-.rating-stars input[type="radio"] {
-    display: none;
-}
-.rating-stars label {
-    font-size: 2em;
-    color: #ddd;
-    cursor: pointer;
-    padding: 0 2px;
-}
-/* Thay màu vàng bằng màu tím */
-.rating-stars input[type="radio"]:checked ~ label,
-.rating-stars label:hover,
-.rating-stars label:hover ~ label {
-    color: var(--color-brand-purple);
-}
-
-/* ----- Report Chart (group_report.php) ----- */
-.chart-container img {
-    max-width: 100%;
-    height: auto;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-md);
-}
-
-/* ----- Modal Files (group_details.php) ----- */
-#modal-task-files {
-    max-height: 150px;
-    overflow-y: auto;
-    background-color: var(--color-body-bg);
-    padding: 10px;
-    border-radius: var(--border-radius-sm);
-    list-style-type: none;
-}
-#modal-task-files li {
-    margin-bottom: 5px;
-}
-
-/* ------------------------------------------- */
-/* 6. UTILITY CLASSES
-/* ------------------------------------------- */
-.text-danger {
-    color: var(--color-reject);
+/* ========== FOOTER ========== */
+footer {
+  text-align: center;
+  padding: 1rem;
+  color: #555;
+  font-size: 0.9rem;
 }

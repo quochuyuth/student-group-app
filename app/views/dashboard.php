@@ -1,10 +1,5 @@
 <?php
 // app/views/dashboard.php
-
-// KHÔNG CẦN session_start(); ở đây nữa, vì index.php đã gọi rồi.
-
-// BẢO VỆ TRANG: Kiểm tra xem người dùng đã đăng nhập chưa
-// Nếu chưa, đá về trang đăng nhập
 if (!isset($_SESSION['user_id'])) {
     header('Location: index.php?page=login');
     exit;
@@ -16,23 +11,50 @@ if (!isset($_SESSION['user_id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trang Bảng Tin</title>
-    <link rel="stylesheet" href="public/css/style.css">
+    <title>Bảng điều khiển - StudentGroupApp</title>
+    <link rel="stylesheet" href="public/css/dashboard.css">
 </head>
 <body>
-    <header>
-        <h1>Chào mừng, <?php echo htmlspecialchars($_SESSION['username']); ?>!</h1>
+    <div class="background"></div>
+    <header class="dashboard-header">
+        <h1 class="logo">Student<span>Group</span>App</h1>
         <nav>
-            <a href="index.php?page=profile">Quản lý Hồ sơ</a>
-            <a href="index.php?page=groups">Quản lý Nhóm</a>
-            
-            <a href="index.php?action=logout">Đăng Xuất</a>
+            <a href="index.php?page=profile">Hồ sơ</a>
+            <a href="index.php?page=groups">Quản lí nhóm</a>
+            <a href="index.php?action=logout" class="btn-logout">Đăng xuất</a>
         </nav>
     </header>
 
-    <main>
-        <h2>Đây là trang Bảng tin (Dashboard)</h2>
-        <p>Nơi đây sẽ hiển thị các nhóm, dự án, và công việc của bạn.</p>
+    <main class="dashboard-container">
+        <section class="hero">
+            <div class="hero-text">
+                <h2>Xin chào, <span><?php echo htmlspecialchars($_SESSION['username']); ?></span> 👋</h2>
+                <p>Khám phá không gian làm việc nhóm thông minh và năng động, giúp bạn quản lý dễ dàng và hợp tác hiệu quả hơn.</p>
+                <a href="index.php?page=groups" class="btn-primary">Bắt đầu ngay</a>
+            </div>
+            <div class="hero-img">
+
+            </div>
+        </section>
+
+        <section class="features">
+            <div class="feature-card">
+                <h3>💡 Hợp tác dễ dàng</h3>
+                <p>Kết nối và chia sẻ ý tưởng với các thành viên nhóm một cách linh hoạt và nhanh chóng.</p>
+            </div>
+            <div class="feature-card">
+                <h3>📊 Quản lý thông minh</h3>
+                <p>Theo dõi tiến độ, phân chia nhiệm vụ và tối ưu hiệu suất làm việc của từng dự án.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🎨 Trải nghiệm tinh tế</h3>
+                <p>Thiết kế đẹp mắt, dễ sử dụng và thân thiện với mọi người — làm việc cũng có thể rất vui.</p>
+            </div>
+        </section>
     </main>
+
+    <footer>
+        <p>© 2025 StudentGroupApp — Nền tảng quản lý nhóm toàn diện.</p>
+    </footer>
 </body>
 </html>
