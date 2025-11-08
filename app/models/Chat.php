@@ -10,8 +10,8 @@ class Chat {
 
     public function sendMessage($group_id, $sender_user_id, $message_content) {
         $sql = "INSERT INTO messages 
-                    (group_id, sender_user_id, message_content)
-                VALUES (?, ?, ?)";
+                     (group_id, sender_user_id, message_content)
+                 VALUES (?, ?, ?)";
         $stmt = $this->db->prepare($sql);
         try {
             return $stmt->execute([$group_id, $sender_user_id, $message_content]);
@@ -70,6 +70,19 @@ class Chat {
         $stmt->execute();
         
         return array_reverse($stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
+
+    // *** (SỬA ĐỔI 1) ***
+    // Thêm hàm mới để gửi tin nhắn chỉ chứa poll
+    public function sendPollMessage($group_id, $user_id, $poll_id) {
+        $sql = "INSERT INTO messages (group_id, sender_user_id, poll_id, created_at) 
+                VALUES (?, ?, ?, NOW())";
+        $stmt = $this->db->prepare($sql);
+        try {
+            return $stmt->execute([$group_id, $user_id, $poll_id]);
+        } catch (PDOException $e) { 
+            return false; 
+        }
     }
 }
 ?>

@@ -35,17 +35,23 @@ class Poll {
             }
 
             $this->db->commit();
-            return true;
+            
+            // *** (SỬA ĐỔI 1) ***
+            // Trả về ID của poll vừa tạo, thay vì 'true'
+            return $poll_id; 
 
         } catch (PDOException $e) {
             $this->db->rollBack();
-            return $e->getMessage();
+            
+            // *** (SỬA ĐỔI 2) ***
+            // Trả về false để Controller biết là đã thất bại
+            return false;
         }
     }
 
     /**
      * Lấy tất cả bình chọn của nhóm
-     * SỬA LỖI: Dùng 'poll_question' (Đây là dòng 57 đang báo lỗi)
+     * SỬA LỖI: Dùng 'poll_question'
      */
     public function getPollsByGroupId($group_id) {
         $sql = "SELECT p.poll_id, p.group_id, p.created_by_user_id, p.poll_question, p.created_at, 

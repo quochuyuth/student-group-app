@@ -1,4 +1,5 @@
-/* public/css/group_details.css */
+/* public/css/group_details.css (Bản đầy đủ) */
+
 /* ===== Reset & Base ===== */
 * { box-sizing: border-box; margin:0; padding:0; }
 :root{
@@ -27,7 +28,7 @@ body{
 .bg-overlay{
   position:fixed; inset:0; z-index:-1;
   background: radial-gradient(circle at 10% 10%, rgba(255,255,255,0.08), transparent 10%),
-              radial-gradient(circle at 90% 90%, rgba(255,255,255,0.04), transparent 20%);
+            radial-gradient(circle at 90% 90%, rgba(255,255,255,0.04), transparent 20%);
   pointer-events:none;
 }
 
@@ -109,7 +110,7 @@ body{
 .btn:hover{ transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
 .btn-primary{ background: linear-gradient(90deg,#4f46e5,#06b6d4); }
 
-/* mid-grid: chat + polls */
+/* mid-grid: chat + polls (CSS GỐC CỦA BẠN) */
 .mid-grid{
   display:grid; grid-template-columns: 2fr 380px; gap:18px; margin-bottom:18px;
 }
@@ -150,7 +151,7 @@ body{
 /* small icon button */
 .btn-icon{ background:transparent; border:1px solid rgba(255,255,255,0.18); padding:8px 10px; border-radius:10px; cursor:pointer; }
 
-/* Polls */
+/* Polls (CSS GỐC CỦA BẠN - SẼ BỊ ẨN) */
 .poll-card h2{ margin-bottom:8px; }
 .poll-create input[type="text"]{ width:100%; padding:8px 10px; border-radius:8px; margin-bottom:8px; }
 .poll-list{ max-height:320px; overflow:auto; margin-top:8px; }
@@ -240,4 +241,185 @@ body{
   color: #94a3b8;
   font-style: italic;
   margin-top: 40%;
+}
+
+
+/* ============================================= */
+/* === (MỚI) CODE NÂNG CẤP CHAT/POLL/SIDEBAR === */
+/* ============================================= */
+
+/* Ẩn poll-card cũ (vì đã bị thay thế) */
+.poll-card {
+  display: none !important;
+}
+
+/* ---- 2. CSS cho Sidebar Thông tin (Mới) ---- */
+/* Vì .info-sidebar là 1 .card và nằm trong .mid-grid,
+  nó sẽ tự động chiếm cột thứ 2 (380px)
+  trong layout grid cũ của bạn.
+*/
+.info-sidebar {
+  /* Thêm flex để kiểm soát content bên trong */
+  display: flex;
+  flex-direction: column;
+  /* Đảm bảo chiều cao không bị vỡ */
+  height: 100%;
+}
+
+.info-sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+.info-sidebar-header h3 {
+  color: #041024;
+  font-size: 1.1rem;
+}
+
+/* (SỬA LỖI LAYOUT) Thêm chiều cao cố định cho content
+   để khớp với .chat-box (420px) 
+*/
+.info-sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  height: 420px; /* <-- Đây là FIX quan trọng nhất */
+}
+.info-sidebar-content h4 {
+  margin-top: 10px;
+  margin-bottom: 8px;
+  color: #06233b;
+}
+.member-list {
+  list-style: none;
+  padding-left: 0; /* Xóa padding list */
+}
+.member-list li {
+  /* Xóa style cũ, để thẻ <a> xử lý */
+}
+
+/* (TÍNH NĂNG MỚI) CSS cho link profile */
+.member-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 4px; /* Thêm padding 1 chút */
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+.member-link:hover {
+  background-color: rgba(255, 255, 255, 0.7);
+}
+.member-link .avatar {
+  flex-shrink: 0; 
+}
+.member-link span {
+  font-weight: 500;
+  color: #1e293b;
+}
+
+
+/* ---- 3. CSS cho Header Chat Card (đã xóa nút) ---- */
+.chat-card .card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+/* Nút 'i' không còn, không cần CSS */
+
+
+/* ---- 4. CSS cho Poll bên trong tin nhắn (Giữ nguyên) ---- */
+.chat-message.is-poll {
+  background: linear-gradient(90deg, #f3e8ff, #eef2ff);
+  max-width: 95%; 
+}
+.poll-container-in-chat {
+  width: 100%;
+}
+.poll-container-in-chat .poll-head {
+  margin-bottom: 8px;
+}
+.poll-container-in-chat .poll-head strong {
+  color: #0f172a;
+  display: block; 
+}
+.poll-container-in-chat .poll-option {
+  position: relative;
+  padding: 8px;
+  border-radius: 8px;
+  margin: 8px 0;
+  overflow: hidden;
+  background: rgba(255,255,255,0.8); 
+  border: 1px solid rgba(255,255,255,0.9);
+}
+.poll-container-in-chat .vote-bar {
+  position: absolute; left:0; top:0; height:100%;
+  background: linear-gradient(90deg,#a78bfa,#60a5fa);
+  opacity:0.25; 
+  z-index:0; 
+  border-radius:8px;
+}
+.poll-container-in-chat label {
+  position: relative; 
+  z-index: 1;
+  display: flex; 
+  justify-content: space-between;
+  align-items: center;
+  color: #0f172a;
+  font-weight: 500;
+}
+.poll-container-in-chat .btn-small,
+.file-attach-form .btn-small {
+  background: var(--accent1);
+  color: white;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  border: none;
+  font-weight: 600;
+}
+
+/* ---- 5. CSS cho Modal Tạo Poll (Giữ nguyên) ---- */
+#create-poll-modal .modal-content {
+  max-width: 500px;
+}
+.modal-content .form-group,
+.modal-content .poll-options-modal {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+}
+.modal-content .form-group label,
+.modal-content .poll-options-modal label {
+  margin-bottom: 4px;
+  font-weight: 600;
+  color: #334155;
+}
+.modal-content .form-group input[type="text"],
+.modal-content .form-group textarea,
+.modal-content .poll-options-modal input[type="text"] {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  font-family: 'Poppins', sans-serif; 
+}
+.comment-form textarea {
+   width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  font-family: 'Poppins', sans-serif;
+}
+
+.poll-options-modal input {
+  margin-bottom: 8px;
+}
+.poll-options-modal input:last-child {
+  margin-bottom: 0;
 }

@@ -13,19 +13,13 @@ if (!isset($_SESSION['user_id'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chi tiết nhóm: <?php echo htmlspecialchars($group['group_name']); ?></title>
 
-    <!-- Font -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Chính: style file (thay file này bằng nội dung CSS đính kèm bên dưới) -->
     <link rel="stylesheet" href="public/css/group_details.css">
-
-    <!-- Giữ lại style cũ chỉ khi cần: (không cần) -->
 </head>
 <body>
-    <!-- Background gradient overlay -->
     <div class="bg-overlay"></div>
 
-    <!-- Header -->
     <header class="topbar">
         <div class="topbar-left">
             <h1 class="group-title"><?php echo htmlspecialchars($group['group_name']); ?></h1>
@@ -48,9 +42,8 @@ if (!isset($_SESSION['user_id'])) {
         }
         ?>
 
-        <!-- Top panels: Invite + Create Task -->
         <section class="top-grid">
-            <div class="card invite-card">
+             <div class="card invite-card">
                 <h2>Mời thành viên mới</h2>
                 <form action="index.php?action=invite_member" method="POST" class="form-inline">
                     <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
@@ -79,14 +72,12 @@ if (!isset($_SESSION['user_id'])) {
                             </select>
                         </div>
                     </div>
-
                     <div class="row">
                         <div class="col-2">
                             <label for="task_description">Mô tả</label>
                             <textarea id="task_description" name="task_description" rows="2"></textarea>
                         </div>
                     </div>
-
                     <div class="row">
                         <div class="col">
                             <label for="assigned_to_user_id">Giao cho</label>
@@ -106,7 +97,6 @@ if (!isset($_SESSION['user_id'])) {
                             <input type="number" id="points" name="points" value="0" min="0">
                         </div>
                     </div>
-
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">Tạo Task</button>
                     </div>
@@ -114,13 +104,15 @@ if (!isset($_SESSION['user_id'])) {
             </div>
         </section>
 
-        <!-- Middle: Chat + Polls -->
         <section class="mid-grid">
+            
             <div class="card chat-card" id="chat">
                 <div class="card-head">
-                    <h2>Chat Nhóm</h2>
-                    <small class="muted">Realtime / chia sẻ file</small>
-                </div>
+                    <div class="chat-head-left">
+                        <h2>Chat Nhóm</h2>
+                        <small class="muted">Realtime / chia sẻ file</small>
+                    </div>
+                    </div>
 
                 <div id="chat-box" class="chat-box">
                     <?php if (empty($messages)): ?>
@@ -130,8 +122,9 @@ if (!isset($_SESSION['user_id'])) {
                             <?php 
                             $isUserClass = ($msg['sender_user_id'] == $_SESSION['user_id']) ? 'is-user' : ''; 
                             $isFileClass = !empty($msg['file_id']) ? 'is-file' : '';
+                            $isPollClass = !empty($msg['poll_id']) ? 'is-poll' : '';
                             ?>
-                            <div class="chat-message <?php echo $isUserClass; ?> <?php echo $isFileClass; ?>">
+                            <div class="chat-message <?php echo $isUserClass; ?> <?php echo $isFileClass; ?> <?php echo $isPollClass; ?>">
                                 <div class="chat-meta">
                                     <div class="avatar"><?php echo strtoupper(substr($msg['sender_name'],0,1)); ?></div>
                                     <div class="meta-text">
@@ -143,6 +136,53 @@ if (!isset($_SESSION['user_id'])) {
                                 <div class="chat-body">
                                     <?php if (!empty($msg['file_id'])): ?>
                                         <p class="file-line">Đã gửi một file: <a href="<?php echo htmlspecialchars($msg['file_path']); ?>" target="_blank"><?php echo htmlspecialchars($msg['file_name']); ?></a></p>
+                                    
+                                    <?php elseif (!empty($msg['poll_id'])): ?>
+                                        <?php
+                                        $current_poll = null;
+                                        foreach ($polls as $poll) {
+                                            if ($poll['poll_id'] == $msg['poll_id']) {
+                                                $current_poll = $poll;
+                                                break;
+                                            }
+                                        }
+                                        ?>
+                                        <?php if ($current_poll): ?>
+                                            <div class="poll-container-in-chat">
+                                                <div class="poll-head">
+                                                    <strong><?php echo htmlspecialchars($current_poll['poll_question']); ?></strong>
+                                                    <small class="muted">(Bởi: <?php echo htmlspecialchars($current_poll['creator_name']); ?>)</small>
+                                                </div>
+                                                <form action="index.php?action=submit_vote" method="POST">
+                                                    <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
+                                                    <input type="hidden" name="poll_id" value="<?php echo $current_poll['poll_id']; ?>">
+                                                    <?php 
+                                                    $total_votes = 0;
+                                                    foreach ($current_poll['options'] as $opt) { $total_votes += $opt['vote_count']; }
+                                                    ?>
+                                                    <?php foreach ($current_poll['options'] as $option): ?>
+                                                        <?php 
+                                                        $user_voted_this = ($user_votes[$current_poll['poll_id']] ?? 0) == $option['option_id'];
+                                                        $vote_percent = ($total_votes > 0) ? ($option['vote_count'] / $total_votes) * 100 : 0;
+                                                        ?>
+                                                        <div class="poll-option">
+                                                            <div class="vote-bar" style="width: <?php echo $vote_percent; ?>%;"></div>
+                                                            <label>
+                                                                <span>
+                                                                    <input type="radio" name="option_id" value="<?php echo $option['option_id']; ?>" 
+                                                                           <?php echo $user_voted_this ? 'checked' : ''; ?> required>
+                                                                    <?php echo htmlspecialchars($option['option_text']); ?>
+                                                                </span>
+                                                                <span class="vote-count">(<?php echo $option['vote_count']; ?>)</span>
+                                                            </label>
+                                                        </div>
+                                                    <?php endforeach; ?>
+                                                    <div style="margin-top:8px;">
+                                                        <button type="submit" class="btn btn-small">Bầu chọn</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        <?php endif; ?>
                                     <?php else: ?>
                                         <p><?php echo htmlspecialchars($msg['message_content']); ?></p>
                                     <?php endif; ?>
@@ -153,12 +193,14 @@ if (!isset($_SESSION['user_id'])) {
                 </div>
 
                 <div id="chat-controls" class="chat-controls">
-                    <form id="hidden-file-form" action="index.php?action=send_file" method="POST" enctype="multipart/form-data">
+                    <form id="hidden-file-form" action="index.php?action=send_file" method="POST" enctype="multipart/form-data" style="display: none;">
                         <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
                         <input type="file" name="group_file" id="group_file_input" onchange="this.form.submit()" title="Đính kèm file">
                     </form>
 
                     <button id="file-upload-btn" class="btn-icon" onclick="document.getElementById('group_file_input').click();" title="Đính kèm file">📎</button>
+                    
+                    <button id="create-poll-btn" class="btn-icon" title="Tạo bình chọn">📊</button>
 
                     <form id="chat-form" action="index.php?action=send_message" method="POST" class="chat-form">
                         <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
@@ -168,73 +210,30 @@ if (!isset($_SESSION['user_id'])) {
                 </div>
             </div>
 
-            <aside class="card poll-card" id="polls">
-                <h2>Bình chọn</h2>
-
-                <div class="poll-create">
-                    <form action="index.php?action=create_poll" method="POST">
-                        <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
-                        <input type="text" name="poll_question" id="poll_question" placeholder="Câu hỏi..." required>
-                        <div class="poll-options">
-                            <input type="text" name="options[]" placeholder="Lựa chọn 1" required>
-                            <input type="text" name="options[]" placeholder="Lựa chọn 2">
-                            <input type="text" name="options[]" placeholder="Lựa chọn 3">
-                        </div>
-                        <button type="submit" class="btn">Tạo Bình Chọn</button>
-                    </form>
-                </div>
-
-                <div id="poll-list" class="poll-list">
-                    <?php if (empty($polls)): ?>
-                        <p class="muted">Chưa có bình chọn nào.</p>
-                    <?php else: ?>
-                        <?php foreach ($polls as $poll): ?>
-                            <div class="poll-container" id="poll-<?php echo $poll['poll_id']; ?>">
-                                <div class="poll-head">
-                                    <strong><?php echo htmlspecialchars($poll['poll_question']); ?></strong>
-                                    <small class="muted">(Bởi: <?php echo htmlspecialchars($poll['creator_name']); ?>)</small>
-                                </div>
-                                <form action="index.php?action=submit_vote" method="POST">
-                                    <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
-                                    <input type="hidden" name="poll_id" value="<?php echo $poll['poll_id']; ?>">
-                                    <?php 
-                                    $total_votes = 0;
-                                    foreach ($poll['options'] as $opt) { $total_votes += $opt['vote_count']; }
-                                    ?>
-                                    <?php foreach ($poll['options'] as $option): ?>
-                                        <?php 
-                                        $user_voted_this = ($user_votes[$poll['poll_id']] ?? 0) == $option['option_id'];
-                                        $vote_percent = ($total_votes > 0) ? ($option['vote_count'] / $total_votes) * 100 : 0;
-                                        ?>
-                                        <div class="poll-option">
-                                            <div class="vote-bar" style="width: <?php echo $vote_percent; ?>%;"></div>
-                                            <label>
-                                                <span>
-                                                    <input type="radio" name="option_id" value="<?php echo $option['option_id']; ?>" 
-                                                           <?php echo $user_voted_this ? 'checked' : ''; ?> required>
-                                                    <?php echo htmlspecialchars($option['option_text']); ?>
-                                                </span>
-                                                <span class="vote-count">(<?php echo $option['vote_count']; ?>)</span>
-                                            </label>
-                                        </div>
-                                    <?php endforeach; ?>
-                                    <div style="margin-top:8px;">
-                                        <button type="submit" class="btn btn-small">Bầu chọn</button>
-                                    </div>
-                                </form>
-                            </div>
+            <aside class="card info-sidebar" id="info-sidebar">
+                <div class="info-sidebar-header">
+                    <h3>Thông tin hội thoại</h3>
+                    </div>
+                <div class="info-sidebar-content">
+                    <h4>Thành viên (<?php echo count($members); ?>)</h4>
+                    <ul class="member-list">
+                        <?php foreach ($members as $member): ?>
+                            <li>
+                                <a href="index.php?page=profile&id=<?php echo $member['user_id']; ?>" class="member-link">
+                                    <div class="avatar"><?php echo strtoupper(substr($member['username'],0,1)); ?></div>
+                                    <span><?php echo htmlspecialchars($member['username']); ?></span>
+                                </a>
+                            </li>
                         <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
+                    </ul>
+                    </div>
             </aside>
+
         </section>
 
-        <!-- Kanban -->
         <section class="kanban-section">
-            <h2>Bảng công việc (Kanban)</h2>
-
+             <h2>Bảng công việc (Kanban)</h2>
             <?php
-            // Định nghĩa $columns để tránh lỗi
             $columns = ['backlog' => [], 'in_progress' => [], 'review' => [], 'done' => []];
             if (is_array($tasks) || is_object($tasks)) {
                 foreach ($tasks as $task) {
@@ -262,9 +261,8 @@ if (!isset($_SESSION['user_id'])) {
             </div>
         </section>
 
-        <!-- bottom quick links -->
         <section class="quick-links">
-            <div class="card">
+             <div class="card">
                 <h3>Đánh giá thành viên</h3>
                 <p>Đánh giá hiệu suất của các thành viên trong nhóm.</p>
                 <a href="index.php?page=group_rubric&group_id=<?php echo $group['group_id']; ?>" class="btn">Đi đến trang Đánh giá</a>
@@ -283,32 +281,47 @@ if (!isset($_SESSION['user_id'])) {
 
     </main>
 
-    <!-- Modal (giữ nguyên id + structure để JS hiện modal) -->
+    <div id="create-poll-modal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="modal-close" id="close-poll-modal-btn">&times;</span>
+            <h2>Tạo bình chọn mới</h2>
+            <form action="index.php?action=create_poll" method="POST" id="create-poll-form">
+                <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
+                <div class="form-group">
+                    <label for="poll_question_modal">Câu hỏi</label>
+                    <input type="text" name="poll_question" id="poll_question_modal" required>
+                </div>
+                <div class="form-group poll-options-modal">
+                    <label>Các lựa chọn</label>
+                    <input type="text" name="options[]" placeholder="Lựa chọn 1" required>
+                    <input type="text" name="options[]" placeholder="Lựa chọn 2">
+                    <input type="text" name="options[]" placeholder="Lựa chọn 3">
+                </div>
+                <button type="submit" class="btn">Tạo Bình Chọn</button>
+            </form>
+        </div>
+    </div>
+
     <div id="task-details-modal" class="modal">
         <div class="modal-content">
             <span class="modal-close" id="modal-close-btn">&times;</span>
-            
             <h2 id="modal-task-title">Tiêu đề Task</h2>
             <p>Giao cho: <strong id="modal-task-assignee"></strong> | Người tạo: <strong id="modal-task-creator"></strong></p>
             <p>Độ ưu tiên: <strong id="modal-task-priority"></strong></p>
             <p>Ngày hết hạn: <strong id="modal-task-due-date"></strong></p>
             <p>Điểm: <strong id="modal-task-points"></strong></p>
-            
             <hr>
             <h3>Mô tả</h3>
             <p id="modal-task-description"></p>
-
             <hr>
             <h3>Tài liệu đính kèm</h3>
             <ul id="modal-task-files"></ul>
-            
             <form action="index.php?action=attach_file_to_task" method="POST" enctype="multipart/form-data" class="file-attach-form">
                 <input type="hidden" name="task_id" id="modal-file-task-id" value="">
                 <input type="hidden" name="group_id" id="modal-file-group-id" value="<?php echo $group['group_id']; ?>">
                 <input type="file" name="task_file" required>
                 <button type="submit" class="btn btn-small">Đính kèm</button>
             </form>
-
             <hr>
             <h3>Bình luận</h3>
             <div id="task-details-comments" class="comments-box"></div>
@@ -323,7 +336,6 @@ if (!isset($_SESSION['user_id'])) {
         </div>
     </div>
 
-    <!-- Sortable + main script (giữ nguyên) -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -355,7 +367,7 @@ if (!isset($_SESSION['user_id'])) {
                 .catch(error => console.error('Lỗi fetch:', error));
             }
 
-            // --- 2. PHẦN MODAL (ĐÃ CẬP NHẬT) ---
+            // --- 2. PHẦN MODAL TASK (Giữ nguyên) ---
             const modal = document.getElementById('task-details-modal');
             const closeModalBtn = document.getElementById('modal-close-btn');
             
@@ -368,11 +380,7 @@ if (!isset($_SESSION['user_id'])) {
                 });
                 
                 closeModalBtn.onclick = () => { modal.style.display = 'none'; }
-                window.onclick = (event) => {
-                    if (event.target == modal) {
-                        modal.style.display = 'none';
-                    }
-                }
+                /* (BỎ SỰ KIỆN window.onclick CŨ) */
 
                 document.getElementById('add-comment-form').addEventListener('submit', function(e) {
                     e.preventDefault();
@@ -393,7 +401,7 @@ if (!isset($_SESSION['user_id'])) {
                 });
             }
 
-            // HÀM MỞ MODAL (ĐÃ CẬP NHẬT ĐỂ LẤY FILE)
+            // HÀM MỞ MODAL TASK (Giữ nguyên)
             function openTaskModal(taskId) {
                 fetch(`index.php?action=get_task_details&task_id=${taskId}`)
                     .then(response => response.json())
@@ -401,7 +409,6 @@ if (!isset($_SESSION['user_id'])) {
                         if (data.success) {
                             const task = data.task;
                             
-                            // Đổ dữ liệu Task
                             document.getElementById('modal-task-title').textContent = task.task_title;
                             document.getElementById('modal-task-assignee').textContent = task.assignee_name || 'Chưa có';
                             document.getElementById('modal-task-creator').textContent = task.creator_name || 'N/A';
@@ -410,13 +417,11 @@ if (!isset($_SESSION['user_id'])) {
                             document.getElementById('modal-task-points').textContent = task.points;
                             document.getElementById('modal-task-description').textContent = task.task_description || 'Không có mô tả.';
                             
-                            // Cập nhật input ẩn cho form Comment VÀ form File
                             document.getElementById('modal-comment-task-id').value = task.task_id;
                             document.getElementById('modal-file-task-id').value = task.task_id;
 
-                            // Đổ dữ liệu Files (MỚI)
                             const filesContainer = document.getElementById('modal-task-files');
-                            filesContainer.innerHTML = ''; // Xóa file cũ
+                            filesContainer.innerHTML = '';
                             if (data.files && data.files.length > 0) {
                                 data.files.forEach(file => {
                                     const fileEl = document.createElement('li');
@@ -427,16 +432,14 @@ if (!isset($_SESSION['user_id'])) {
                                 filesContainer.innerHTML = '<li>Chưa có file nào.</li>';
                             }
                             
-                            // Đổ dữ liệu Comments
                             const commentsContainer = document.getElementById('task-details-comments');
-                            commentsContainer.innerHTML = ''; // Xóa comment cũ
+                            commentsContainer.innerHTML = '';
                             if (data.comments && data.comments.length > 0) {
                                 data.comments.forEach(c => appendComment(c, commentsContainer));
                             } else {
                                 commentsContainer.innerHTML = '<p>Chưa có bình luận nào.</p>';
                             }
 
-                            // Hiển thị Modal
                             modal.style.display = 'block';
                         } else {
                             alert('Lỗi: ' + data.message);
@@ -444,7 +447,7 @@ if (!isset($_SESSION['user_id'])) {
                     });
             }
 
-            // Hàm trợ giúp: thêm HTML của 1 comment
+            // Hàm trợ giúp: thêm HTML của 1 comment (Giữ nguyên)
             function appendComment(comment, container) {
                 const commentEl = document.createElement('div');
                 commentEl.className = 'comment';
@@ -460,8 +463,38 @@ if (!isset($_SESSION['user_id'])) {
             if (chatBox) {
                 chatBox.scrollTop = chatBox.scrollHeight;
             }
+
+            // --- 4. (XÓA BỎ) LOGIC CHO SIDEBAR THÔNG TIN ---
+            /* (Toàn bộ code JS cho toggleBtn, closeInfoBtn đã bị xóa) */
+
+            // --- 5. (SỬA LẠI) LOGIC CHO MODAL TẠO POLL ---
+            const pollModal = document.getElementById('create-poll-modal');
+            const openPollBtn = document.getElementById('create-poll-btn');
+            const closePollBtn = document.getElementById('close-poll-modal-btn');
+
+            if (pollModal && openPollBtn && closePollBtn) {
+                openPollBtn.addEventListener('click', (e) => {
+                    e.preventDefault(); 
+                    pollModal.style.display = 'block';
+                });
+                
+                closePollBtn.addEventListener('click', () => {
+                    pollModal.style.display = 'none';
+                });
+
+                // (SỬA LẠI) Đóng modal khi click ra ngoài
+                window.addEventListener('click', (event) => {
+                    if (event.target == pollModal) {
+                        pollModal.style.display = 'none';
+                    }
+                    // Đóng modal task detail (giữ nguyên)
+                    if (event.target == modal) {
+                        modal.style.display = 'none';
+                    }
+                });
+            }
+
         });
     </script>
 </body>
 </html>
-        

@@ -1,0 +1,42 @@
+/* public/css/view_profile.css */
+
+/* Định dạng các trường thông tin chỉ xem */
+.info-group {
+  margin-bottom: 1.2rem;
+}
+
+.info-group label {
+  font-weight: 600;
+  color: #555; /* Màu nhạt hơn 1 chút */
+  font-size: 0.9rem;
+}
+
+.info-group p {
+  font-size: 1rem;
+  color: #111; /* Màu chữ chính */
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  min-height: 40px; /* Chiều cao tối thiểu */
+  word-wrap: break-word; /* Tự động xuống dòng */
+}
+
+/* Nút quay lại */
+.btn-secondary {
+  display: inline-block;
+  background: #6c757d;
+  color: white;
+  padding: 0.8rem 1.5rem;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: none;
+  text-decoration: none;
+  margin-top: 1rem;
+}
+.btn-secondary:hover {
+  background: #5a6268;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
