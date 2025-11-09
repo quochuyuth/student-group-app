@@ -1,5 +1,5 @@
 <?php
-// index.php (Bản HOÀN CHỈNH - Đã gộp code Profile)
+// index.php (Bản HOÀN CHỈNH - Đã gộp code Profile + Rubric + Feedback)
 
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
@@ -20,15 +20,15 @@ if ($action) {
             if ($action == 'logout') $authController->logout();
             break;
         
-        // --- (SỬA ĐỔI) Nhóm các action của User ---
+        // --- Nhóm các action của User ---
         case 'update_profile':
-        case 'upload_avatar': // <-- THÊM ACTION MỚI
+        case 'upload_avatar':
             require_once 'app/controllers/UserController.php';
             $userController = new UserController($db);
             if ($action == 'update_profile') $userController->updateProfile();
-            if ($action == 'upload_avatar') $userController->uploadAvatar(); // <-- THÊM HÀM GỌI MỚI
+            if ($action == 'upload_avatar') $userController->uploadAvatar();
             break;
-        // ------------------------------------------
+        // ---------------------------------
 
         case 'create_group': case 'invite_member': case 'accept_invitation': case 'reject_invitation':
             require_once 'app/controllers/GroupController.php';
@@ -48,7 +48,7 @@ if ($action) {
             if ($action == 'attach_file_to_task') $taskController->attachFile();
             break;
 
-        // == BẮT ĐẦU CÁC ACTION CỦA RUBRIC (Giữ nguyên code của bạn) ==
+        // == BẮT ĐẦU CÁC ACTION CỦA RUBRIC (Code của bạn) ==
         case 'submit_rubric':
             require_once 'app/controllers/RubricController.php';
             $rubricController = new RubricController($db);
@@ -104,19 +104,18 @@ else {
         case 'login': case 'home': default: require 'app/views/auth/login.php'; break;
         case 'dashboard': require 'app/views/dashboard.php'; break;
         
-        // --- (SỬA ĐỔI) Tách Xem và Sửa Profile ---
+        // --- Tách Xem và Sửa Profile ---
         case 'profile':
             require_once 'app/controllers/UserController.php';
             $userController = new UserController($db);
-            $userController->viewProfile(); // <-- Sửa: Gọi hàm viewProfile() (Trang XEM)
+            $userController->viewProfile();
             break;
-
-        case 'edit_profile': // <-- THÊM PAGE MỚI DÙNG ĐỂ SỬA
+        case 'edit_profile': 
             require_once 'app/controllers/UserController.php';
             $userController = new UserController($db);
-            $userController->showEditProfile(); // <-- Gọi hàm showEditProfile() (Trang SỬA)
+            $userController->showEditProfile();
             break;
-        // ---------------------------------------
+        // -------------------------------
 
         case 'groups':
             require_once 'app/controllers/GroupController.php';
@@ -129,7 +128,7 @@ else {
             $groupController->show();
             break;
         
-        // --- (Giữ nguyên code Rubric của bạn) ---
+        // --- (Code Rubric của bạn) ---
         case 'group_rubric':
             require_once 'app/controllers/RubricController.php';
             $rubricController = new RubricController($db);
@@ -141,7 +140,7 @@ else {
             $rubricController = new RubricController($db);
             $rubricController->showManager();
             break;
-        // --------------------------------------
+        // ------------------------------
             
         case 'group_meetings':
             require_once 'app/controllers/MeetingController.php';
@@ -159,6 +158,12 @@ else {
             $reportController = new ReportController($db);
             $reportController->show();
             break;
+
+        // *** (THÊM MỚI CỦA TÔI) ***
+        case 'anonymous_feedback':
+            require 'app/views/anonymous_feedback.php';
+            break;
+        // *** (HẾT PHẦN MỚI) ***
     }
 }
 ?>

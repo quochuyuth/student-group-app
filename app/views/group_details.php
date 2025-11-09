@@ -5,6 +5,7 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 // Các biến ($group, $tasks, $members, $messages, $polls, $user_votes, $chat_files)
+// (Giả định $chat_files và $polls được load từ GroupController)
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -26,7 +27,7 @@ if (!isset($_SESSION['user_id'])) {
         <nav class="topnav">
             <a href="index.php?page=dashboard">🏠 Trang chủ</a>
             <a href="index.php?page=profile">👤 Hồ sơ</a>
-            <a href="index.php?page=groups">📚 Danh sách nhóm</a>
+            <a href="index.php?page=groups">👥 Nhóm</a> <a href="index.php?page=groups">📚 Danh sách nhóm</a>
             <a href="index.php?action=logout" class="logout">🚪 Đăng xuất</a>
         </nav>
     </header>
@@ -189,7 +190,6 @@ if (!isset($_SESSION['user_id'])) {
                     <div id="emoji-picker" class="emoji-picker">
                         <span>🙂</span><span>😂</span><span>❤️</span><span>👍</span><span>🎉</span><span>🙏</span><span>🤔</span><span>😢</span>
                     </div>
-
                     <div id="chat-controls" class="chat-controls">
                         <form id="hidden-file-form" action="index.php?action=send_file" method="POST" enctype="multipart/form-data" style="display: none;">
                             <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
@@ -197,16 +197,15 @@ if (!isset($_SESSION['user_id'])) {
                         </form>
                         <button id="file-upload-btn" class="btn-icon" onclick="document.getElementById('group_file_input').click();" title="Đính kèm file">📎</button>
                         <button id="create-poll-btn" class="btn-icon" title="Tạo bình chọn">📊</button>
-                        
                         <button id="emoji-toggle-btn" class="btn-icon" title="Chọn icon">🙂</button> 
-                        
                         <form id="chat-form" action="index.php?action=send_message" method="POST" class="chat-form">
                             <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
                             <input type="text" id="chat-message-input" name="message_content" placeholder="Gõ tin nhắn của bạn..." required autocomplete="off">
                             <button type="submit" class="btn btn-primary">Gửi</button>
                         </form>
                     </div>
-                </div> </div>
+                </div> 
+            </div>
 
             <aside class="card info-sidebar" id="info-sidebar">
                 <div class="info-sidebar-header">
@@ -297,7 +296,13 @@ if (!isset($_SESSION['user_id'])) {
                 <p>Xem biểu đồ tiến độ và điểm đóng góp của nhóm.</p>
                 <a href="index.php?page=group_report&group_id=<?php echo $group['group_id']; ?>" class="btn">Xem Báo Cáo</a>
             </div>
-        </section>
+
+            <div class="card">
+                <h3>Phản hồi ẩn danh</h3>
+                <p>Gửi góp ý của bạn cho trưởng nhóm một cách an toàn.</p>
+                <a href="index.php?page=anonymous_feedback&group_id=<?php echo $group['group_id']; ?>" class="btn">Gửi phản hồi</a>
+            </div>
+            </section>
 
     </main>
 
@@ -388,7 +393,7 @@ if (!isset($_SESSION['user_id'])) {
             }
 
             // --- 2. MODAL TASK (Giữ nguyên) ---
-            const taskModal = document.getElementById('task-details-modal'); // Sửa tên biến
+            const taskModal = document.getElementById('task-details-modal'); 
             const closeModalBtn = document.getElementById('modal-close-btn');
             if (taskModal) {
                 document.querySelectorAll('.task-card').forEach(card => {
@@ -490,7 +495,7 @@ if (!isset($_SESSION['user_id'])) {
                 if (event.target == pollModal) {
                     pollModal.style.display = 'none';
                 }
-                if (event.target == taskModal) { // Sửa tên biến
+                if (event.target == taskModal) { 
                     taskModal.style.display = 'none';
                 }
             });
@@ -506,41 +511,27 @@ if (!isset($_SESSION['user_id'])) {
                 });
             });
 
-
-            // --- 7. (MỚI) LOGIC CHO BẢNG CHỌN ICON ---
+            // --- 7. LOGIC ICON (Giữ nguyên) ---
             const emojiToggleBtn = document.getElementById('emoji-toggle-btn');
             const emojiPicker = document.getElementById('emoji-picker');
             const chatInput = document.getElementById('chat-message-input');
-
             if (emojiToggleBtn && emojiPicker && chatInput) {
-                // Bật/tắt bảng chọn
                 emojiToggleBtn.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Ngăn click lan ra window
+                    e.stopPropagation(); 
                     emojiPicker.classList.toggle('is-open');
                 });
-
-                // Thêm icon vào input khi bấm
                 emojiPicker.addEventListener('click', (e) => {
-                    // Chỉ xử lý khi bấm vào <span> (icon)
                     if (e.target.tagName === 'SPAN') {
                         e.stopPropagation();
                         const icon = e.target.textContent;
-                        
-                        // Chèn icon vào vị trí con trỏ
                         const start = chatInput.selectionStart;
                         const end = chatInput.selectionEnd;
                         const text = chatInput.value;
-                        
                         chatInput.value = text.substring(0, start) + icon + text.substring(end);
-                        
-                        // Di chuyển con trỏ đến sau icon vừa chèn
                         chatInput.selectionStart = chatInput.selectionEnd = start + icon.length;
-                        
-                        chatInput.focus(); // Tập trung lại vào ô input
+                        chatInput.focus(); 
                     }
                 });
-
-                // Đóng bảng chọn khi bấm ra ngoài
                 window.addEventListener('click', (e) => {
                     if (emojiPicker.classList.contains('is-open')) {
                         emojiPicker.classList.remove('is-open');
