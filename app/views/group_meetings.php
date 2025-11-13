@@ -1,87 +1,94 @@
 <?php
-if (!isset($_SESSION['user_id'])) {
-    header('Location: index.php?page=login');
-    exit;
-}
+// Tệp: app/views/group_meetings.php (Bản HOÀN THIỆN với SB Admin 2)
+
+// 1. Gọi Header
+require 'app/views/layout/header.php'; 
+
+
+// Các biến $group và $meetings đã được MeetingController tải
 ?>
 
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quản lý Họp - <?php echo htmlspecialchars($group['group_name']); ?></title>
-  <link rel="stylesheet" href="public/css/group_meetings.css">
-</head>
-<body>
-  <div class="background-overlay"></div>
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">📅 Quản lý Họp nhóm: <?php echo htmlspecialchars($group['group_name']); ?></h1>
+    <a href="index.php?page=group_details&id=<?php echo $group['group_id']; ?>" class="btn btn-sm btn-secondary shadow-sm">
+        <i class="fas fa-arrow-left fa-sm text-white-50"></i> Quay lại nhóm
+    </a>
+</div>
 
-  <header class="dashboard-header">
-    <h1>📅 Họp nhóm: <span><?php echo htmlspecialchars($group['group_name']); ?></span></h1>
-    <nav>
-      <a href="index.php?page=dashboard">Trang chủ</a>
-      <a href="index.php?page=profile">Hồ sơ</a>
-      <a href="index.php?page=groups">Danh sách nhóm</a>
-      <a href="index.php?page=group_details&id=<?php echo $group['group_id']; ?>">🔙 Quản lí nhóm</a>
-      <a href="index.php?action=logout" class="logout-btn">🚪 Đăng xuất</a>
-    </nav>
-  </header>
+<?php if (isset($_SESSION['flash_message'])): ?>
+    <div class="alert alert-success shadow-sm mb-4">
+        <?php echo htmlspecialchars($_SESSION['flash_message']); ?>
+    </div>
+    <?php unset($_SESSION['flash_message']); ?>
+<?php endif; ?>
 
-  <main class="container">
-    <?php if (isset($_SESSION['flash_message'])): ?>
-      <div class="flash-message">
-        <?php echo $_SESSION['flash_message']; unset($_SESSION['flash_message']); ?>
-      </div>
-    <?php endif; ?>
+<div class="row">
 
-    <section class="form-section">
-      <h2>🗓️ Tạo cuộc họp mới</h2>
-      <form action="index.php?action=create_meeting" method="POST">
-        <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
-
-        <div class="form-group">
-          <label for="meeting_title">Tiêu đề:</label>
-          <input type="text" id="meeting_title" name="meeting_title" required>
-        </div>
-
-        <div class="form-group">
-          <label for="start_time">Thời gian bắt đầu:</label>
-          <input type="datetime-local" id="start_time" name="start_time" required>
-        </div>
-
-        <div class="form-group">
-          <label for="agenda">Nội dung (Agenda):</label>
-          <textarea id="agenda" name="agenda" rows="4"></textarea>
-        </div>
-
-        <button type="submit" class="btn-primary">Tạo Lịch</button>
-      </form>
-    </section>
-
-    <section class="list-section">
-      <h2>📋 Danh sách các cuộc họp</h2>
-
-      <?php if (empty($meetings)): ?>
-        <p class="empty">Chưa có cuộc họp nào được đặt.</p>
-      <?php else: ?>
-        <div class="meeting-list">
-          <?php foreach ($meetings as $meeting): ?>
-            <div class="meeting-card">
-              <h3>
-                <a href="index.php?page=meeting_details&id=<?php echo $meeting['meeting_id']; ?>">
-                  <?php echo htmlspecialchars($meeting['meeting_title']); ?>
-                </a>
-              </h3>
-              <p><strong>🕒 Thời gian:</strong> <?php echo date('d/m/Y H:i', strtotime($meeting['start_time'])); ?></p>
-              <p><strong>👤 Người đặt:</strong> <?php echo htmlspecialchars($meeting['creator_name']); ?></p>
-              <div class="agenda"><strong>📝 Agenda:</strong>
-                <pre><?php echo htmlspecialchars($meeting['agenda']); ?></pre>
-              </div>
+    <div class="col-lg-5">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-plus-circle"></i> Tạo cuộc họp mới</h6>
             </div>
-          <?php endforeach; ?>
+            <div class="card-body">
+                <form action="index.php?action=create_meeting" method="POST">
+                    <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
+                    
+                    <div class="form-group">
+                        <label for="meeting_title">Tiêu đề cuộc họp:</label>
+                        <input type="text" class="form-control" id="meeting_title" name="meeting_title" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="start_time">Thời gian bắt đầu:</label>
+                        <input type="datetime-local" class="form-control" id="start_time" name="start_time" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="agenda">Nội dung (Agenda):</label>
+                        <textarea class="form-control" id="agenda" name="agenda" rows="5" placeholder="Gạch đầu dòng các nội dung cần thảo luận..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-icon-split">
+                        <span class="icon text-white-50"><i class="fas fa-calendar-plus"></i></span>
+                        <span class="text">Tạo Lịch họp</span>
+                    </button>
+                </form>
+            </div>
         </div>
-      <?php endif; ?>
-    </section>
-  </main>
-</body>
-</html>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-list-ul"></i> Danh sách các cuộc họp</h6>
+            </div>
+            <div class="card-body">
+                <?php if (empty($meetings)): ?>
+                    <p class="text-muted text-center mt-3">Chưa có cuộc họp nào được đặt.</p>
+                <?php else: ?>
+                    <div class="list-group">
+                        <?php foreach ($meetings as $meeting): ?>
+                            <a href="index.php?page=meeting_details&id=<?php echo $meeting['meeting_id']; ?>" 
+                               class="list-group-item list-group-item-action flex-column align-items-start mb-2 shadow-sm border-left-info">
+                                
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1 text-primary"><?php echo htmlspecialchars($meeting['meeting_title']); ?></h5>
+                                    <small class="text-muted"><?php echo date('d/m/Y H:i', strtotime($meeting['start_time'])); ?></small>
+                                </div>
+                                <p class="mb-1 text-gray-700">
+                                    Nội dung: <?php echo htmlspecialchars(substr($meeting['agenda'], 0, 100)) . '...'; ?>
+                                </p>
+                                <small class="text-muted">Người tạo: <?php echo htmlspecialchars($meeting['creator_name']); ?></small>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php
+// 2. Gọi Footer
+require 'app/views/layout/footer.php'; 
+?>

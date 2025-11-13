@@ -1,0 +1,135 @@
+/* =======================================================
+   TỆP: public/css/custom.css (Bản Nâng Cấp Toàn Diện)
+========================================================== */
+
+/* ----- 1. TOÀN CỤC: Đổi Font chữ (cho hiện đại hơn) ----- */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+body {
+    /* Dùng font Poppins cho toàn trang */
+    font-family: 'Poppins', sans-serif !important;
+    background-color: #f0f2f5; /* Nền xám Facebook, sạch hơn */
+}
+/* Giữ font Nunito cho một số chỗ (nếu muốn) */
+h1, h2, h3, h4, h5, h6, .sidebar .nav-item .nav-link, .topbar, .dropdown-item, .modal-title {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500; /* Font Poppins hơi mảnh, cần đậm hơn */
+}
+.sidebar .nav-item .nav-link span {
+    font-weight: 500; /* Chữ menu */
+}
+
+/* ----- 2. SIDEBAR: Đổi màu Tím (Purple) & Đổ bóng ----- */
+.bg-gradient-primary {
+    /* Màu tím hiện đại (giống Argon) */
+    background-image: linear-gradient(195deg, #5f4dee 0%, #3427a8 100%); /* ĐỔI MÀU TÍM */
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15); /* Thêm bóng đổ */
+}
+/* Sửa màu khi 'active' */
+.sidebar.sidebar-dark .nav-item.active .nav-link {
+    background-color: rgba(255, 255, 255, 0.1); /* Sáng hơn 1 chút */
+    font-weight: 600;
+    border-radius: 0.375rem;
+    margin: 0 0.5rem;
+}
+.sidebar.sidebar-dark .nav-item .nav-link[data-toggle="collapse"]::after {
+    color: rgba(255,255,255,0.8); /* Mũi tên sáng hơn */
+}
+/* Sửa lại link 'TÀI KHOẢN' cho giống menu */
+.sidebar .sidebar-heading {
+    color: rgba(255,255,255,0.4);
+    font-size: 0.65rem;
+    padding-left: 1rem;
+}
+
+
+/* ----- 3. CARD: Hiệu ứng "Soft" & "Hover" ----- */
+.card {
+    border: none; /* Bỏ viền 1px mặc định */
+    border-radius: 0.75rem; /* Bo góc mềm mại hơn */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover {
+    transform: translateY(-5px); /* Hiệu ứng "nhấc lên" khi di chuột */
+    box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.08) !important; /* Đổ bóng rõ hơn */
+}
+.card-header {
+    background-color: #ffffff; /* Nền trắng sạch sẽ */
+    border-bottom: 1px solid #e3e6f0;
+    border-top-left-radius: 0.75rem;
+    border-top-right-radius: 0.75rem;
+}
+/* Đổi màu tất cả tiêu đề card sang màu Tím chủ đạo */
+.card-header .m-0.font-weight-bold.text-primary {
+    color: #5f4dee !important;
+}
+
+/* ----- 4. NÚT BẤM (BUTTONS): Thêm Gradient & Bóng đổ ----- */
+.btn {
+    border-radius: 0.5rem; /* Bo góc nút bấm */
+}
+.btn-primary {
+    /* Dùng Gradient cho nút bấm */
+    background-image: linear-gradient(45deg, #5f4dee 0%, #7668ff 100%);
+    border: none;
+    box-shadow: 0 4px 15px rgba(95, 77, 238, 0.3);
+    transition: all 0.3s ease;
+}
+.btn-primary:hover {
+    background-image: linear-gradient(45deg, #7668ff 0%, #5f4dee 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(95, 77, 238, 0.5);
+}
+.btn-primary:focus, .btn-primary.focus {
+    box-shadow: 0 0 0 0.2rem rgba(119, 106, 237, 0.5);
+}
+/* Sửa các màu viền (border) sang màu Tím */
+.border-left-primary { border-left: .25rem solid #5f4dee !important; }
+.text-primary { color: #5f4dee !important; }
+
+/* ----- 5. NÂNG CẤP LIST (Trang Groups, Meetings) ----- */
+.list-group-item-action {
+    border-radius: 0.75rem !important; 
+    border: 1px solid #e3e6f0 !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-left-color 0.2s ease;
+}
+.list-group-item-action:hover {
+    transform: translateX(5px) scale(1.01); 
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.07) !important;
+    border-left-color: #5f4dee !important; 
+    z-index: 10;
+}
+.list-group-item-action h5.text-primary {
+    color: #4a3dcf !important; /* Màu tím đậm */
+    font-weight: 600;
+}
+
+/* ----- 6. NÂNG CẤP KANBAN (Trang group_details) ----- */
+.kanban-column .card-header { border-radius: 0; }
+.kanban-column .task-card {
+    border-left-width: 4px;
+    border-radius: 0.5rem;
+    cursor: grab !important;
+}
+.task-card.priority-low { border-left-color: #1cc88a; }
+.task-card.priority-medium { border-left-color: #4e73df; }
+.task-card.priority-high { border-left-color: #f6c23e; }
+.task-card.priority-critical { border-left-color: #e74a3b; }
+
+/* ----- 7. NÂNG CẤP BẢNG (Trang Report & Rubric) ----- */
+.table thead th {
+    background-color: #f8f9fc;
+    color: #5f4dee; /* Chữ Tím */
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    border-bottom-width: 2px;
+}
+.table-hover tbody tr:hover {
+    background-color: #f8f6ff !important; /* Màu tím RẤT nhạt */
+}
+
+/* ----- 8. NÂNG CẤP LOGIN (Đổi nền) ----- */
+body.bg-gradient-primary {
+    background-image: linear-gradient(195deg, #5f4dee 0%, #3427a8 100%) !important;
+}

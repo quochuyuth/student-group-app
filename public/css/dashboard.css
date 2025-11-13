@@ -1,222 +1,72 @@
-/* ====== Reset ====== */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Poppins', sans-serif;
-}
+<?php
+// Tệp: app/views/dashboard.php
+// 1. Gọi Header (đã bao gồm session check)
+require 'app/views/layout/header.php'; 
+?>
 
-/* ====== Nền động ====== */
-body {
-  color: #222;
-  min-height: 100vh;
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Bảng điều khiển</h1>
+    <a href="index.php?page=groups" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+        <i class="fas fa-users fa-sm text-white-50"></i> Xem các nhóm
+    </a>
+</div>
 
-  position: relative;
-  overflow-x: hidden;
-}
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Chào mừng, <?php echo htmlspecialchars($_SESSION['username']); ?>!</h6>
+    </div>
+    <div class="card-body">
+        <p>Khám phá không gian làm việc nhóm thông minh và năng động, giúp bạn quản lý dễ dàng và hợp tác hiệu quả hơn.</p>
+    </div>
+</div>
 
-.background {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background:
-    url('../images/bg-login.jpg') center/cover no-repeat;
-  background-size: cover;
-  animation: gradientMove 10s ease infinite;
-  z-index: -1;
-}
+<div class="row">
 
-@keyframes gradientMove {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
+    <div class="col-lg-4 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Hợp tác dễ dàng</div>
+                        <div class="h5 mb-0 text-gray-800">Kết nối & Chia sẻ</div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-comments fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-/* ====== Header ====== */
-.dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.2rem 3rem;
-  backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.3);
-  border-bottom: 1px solid rgba(255,255,255,0.4);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
+    <div class="col-lg-4 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Quản lý thông minh</div>
+                        <div class="h5 mb-0 text-gray-800">Theo dõi tiến độ</div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-tasks fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-.logo {
-  font-weight: 700;
-  font-size: 1.6rem;
-  color: #222;
-}
-.logo span {
-  color: #007bff;
-}
+    <div class="col-lg-4 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Trải nghiệm tinh tế</div>
+                        <div class="h5 mb-0 text-gray-800">Giao diện đẹp</div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-paint-brush fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+  T </div>
 
-nav a {
-  margin-left: 1.5rem;
-  text-decoration: none;
-  color: #333;
-  font-weight: 600;
-  transition: color 0.3s ease;
-}
-nav a:hover {
-  color: #007bff;
-}
-.btn-logout {
-  background: #ff4b2b;
-  color: #fff !important;
-  padding: 0.6rem 1rem;
-  border-radius: 8px;
-  transition: background 0.3s ease;
-}
-.btn-logout:hover {
-  background: #ff1e00;
-}
+</div>
 
-/* ====== Hero ====== */
-.dashboard-container {
-  padding: 3rem 5%;
-}
-.hero {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 2rem;
-  margin-top: 2rem;
-}
-.hero-text {
-  flex: 1 1 400px;
-  animation: fadeIn 1s ease forwards;
-}
-.hero-text h2 {
-  font-size: 2rem;
-  margin-bottom: 1rem;
-  color: #222;
-}
-.hero-text h2 span {
-  color: #007bff;
-}
-.hero-text p {
-  color: #555;
-  margin-bottom: 1.5rem;
-  font-size: 1.1rem;
-  line-height: 1.6;
-}
-.btn-primary {
-  display: inline-block;
-  background: linear-gradient(135deg, #007bff, #00e0ff);
-  color: white;
-  padding: 0.8rem 1.5rem;
-  border-radius: 10px;
-  font-weight: 600;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.btn-primary:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(0,123,255,0.4);
-}
-
-.hero-img img {
-  max-width: 100%;
-  border-radius: 20px;
-  filter: drop-shadow(0 6px 15px rgba(0,0,0,0.2));
-  animation: float 4s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
-
-/* ====== Features ====== */
-.features {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
-  margin-top: 3rem;
-}
-.feature-card {
-  background: rgba(255,255,255,0.6);
-  border-radius: 16px;
-  padding: 2rem;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.feature-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-}
-.feature-card h3 {
-  color: #007bff;
-  margin-bottom: 0.8rem;
-}
-.feature-card p {
-  color: #444;
-  line-height: 1.6;
-}
-
-/* ====== Footer ====== */
-footer {
-  text-align: center;
-  margin-top: 4rem;
-  padding: 2rem 1rem;
-  color: #333;
-  font-size: 0.9rem;
-  backdrop-filter: blur(8px);
-  background: rgba(255,255,255,0.3);
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-/* ====== Header ====== */
-.dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.2rem 3rem;
-  backdrop-filter: blur(12px);
-  background: rgba(0, 123, 255, 0.25); /* Màu xanh nhẹ thay cho trắng */
-  border-bottom: 1px solid rgba(0,123,255,0.4); /* viền xanh */
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.logo {
-  font-weight: 700;
-  font-size: 1.6rem;
-  color: #007bff; /* Logo màu xanh */
-}
-.logo span {
-  color: #00e0ff; /* Màu xanh gradient nhấn */
-}
-
-nav a {
-  margin-left: 1.5rem;
-  text-decoration: none;
-  color: #fff; /* menu trắng nổi trên nền xanh */
-  font-weight: 600;
-  transition: color 0.3s ease;
-}
-nav a:hover {
-  color: #00e0ff; /* hover xanh nhấn */
-}
-
-/* Logout button nếu muốn vẫn giữ cam nổi bật */
-.btn-logout {
-  background: #ff4b2b;
-  color: #fff !important;
-  padding: 0.6rem 1rem;
-  border-radius: 8px;
-  transition: background 0.3s ease;
-}
-.btn-logout:hover {
-  background: #ff1e00;
-}
+<?php
+// 2. Gọi Footer
+require 'app/views/layout/footer.php'; 
+?>

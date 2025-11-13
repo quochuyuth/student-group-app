@@ -1,126 +1,132 @@
-<?php 
-// app/views/profile.php (Trang CHỈNH SỬA)
+<?php
+// Tệp: app/views/profile.php (Bản HOÀN THIỆN với SB Admin 2)
+// Trang này ứng với ?page=edit_profile
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-if (!isset($_SESSION['user_id'])) {
-    header('Location: index.php?page=login');
-    exit;
-}
+// 1. Gọi Header
+require 'app/views/layout/header.php'; 
 
-// Biến $user được truyền từ hàm showEditProfile() trong UserController
+// Biến $user đã được UserController (hàm showEditProfile) tải
+$user_avatar = $_SESSION['user_avatar'] ?? $user['avatar_url'] ?? 'public/img/undraw_profile.svg';
 ?>
 
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chỉnh sửa Hồ sơ - <?php echo htmlspecialchars($user['username']); ?></title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="public/css/profile.css">
-</head>
+<h1 class="h3 mb-4 text-gray-800">Chỉnh sửa Hồ sơ</h1>
 
-<body>
-  <div class="background"></div>
-
-  <header class="dashboard-header">
-    <div class="logo">Student<span>Group</span>App</div>
-    <nav>
-      <a href="index.php?page=edit_profile" class="active">Hồ sơ</a> 
-      <a href="index.php?page=groups">Danh Sách Nhóm</a>
-      <a href="index.php?page=dashboard">Trang Chủ</a>
-      <a href="index.php?action=logout" class="btn-logout">Đăng Xuất</a>
-    </nav>
-  </header>
-
-  <main class="profile-container">
-    <?php if (isset($_SESSION['flash_message'])): ?>
-      <div class="flash-message"><?= htmlspecialchars($_SESSION['flash_message']); ?></div>
-      <?php unset($_SESSION['flash_message']); ?>
-    <?php endif; ?>
-
-    <div class="profile-card fadeIn">
-      <div class="avatar-section">
-        <img id="avatarPreview"
-             src="<?= htmlspecialchars($_SESSION['user_avatar'] ?? $user['avatar_url'] ?? 'https://i.pravatar.cc/200?u=' . $user['email']); ?>"
-             alt="Avatar"
-             class="avatar">
-
-        <form id="avatarForm" action="index.php?action=upload_avatar" method="POST" enctype="multipart/form-data">
-          <input type="file" id="avatarInput" name="avatar" accept="image/*" hidden>
-          <button type="button" class="change-avatar-btn" onclick="document.getElementById('avatarInput').click();">
-            Thay đổi ảnh
-          </button>
-        </form>
-      </div>
-
-      <form action="index.php?action=update_profile" method="POST" class="fadeInDelay">
-        <h3>Thông tin cơ bản</h3>
-        <div class="form-group">
-          <label>Tên người dùng:</label>
-          <input type="text" value="<?php echo htmlspecialchars($user['username']); ?>" disabled>
-        </div>
-        <div class="form-group">
-          <label>Email:</label>
-          <input type="email" value="<?php echo htmlspecialchars($user['email']); ?>" disabled>
-        </div>
-
-        <hr>
-
-        <h3>Thông tin hồ sơ</h3>
-        <p>Hãy chia sẻ về bạn để đồng đội dễ dàng tìm thấy!</p>
-
-        <div class="form-group">
-          <label for="major">Ngành học:</label>
-          <input type="text" id="major" name="profile_major" value="<?php echo htmlspecialchars($user['profile_major'] ?? ''); ?>">
-        </div>
-
-        <div class="form-group">
-          <label for="skills">Các kỹ năng:</label>
-          <textarea id="skills" name="profile_skills"><?php echo htmlspecialchars($user['profile_skills'] ?? ''); ?></textarea>
-        </div>
-
-        <div class="form-group">
-          <label for="interests">Sở thích:</label>
-          <textarea id="interests" name="profile_interests"><?php echo htmlspecialchars($user['profile_interests'] ?? ''); ?></textarea>
-        </div>
-
-        <div class="form-group">
-          <label for="strengths">Điểm mạnh:</label>
-          <textarea id="strengths" name="profile_strengths"><?php echo htmlspecialchars($user['profile_strengths'] ?? ''); ?></textarea>
-        </div>
-
-        <div class="form-group">
-          <label for="weaknesses">Điểm yếu:</label>
-          <textarea id="weaknesses" name="profile_weaknesses"><?php echo htmlspecialchars($user['profile_weaknesses'] ?? ''); ?></textarea>
-        </div>
-
-        <div class="form-group">
-          <label for="role">Vai trò mong muốn trong nhóm:</label>
-          <input type="text" id="role" name="profile_role_preference" value="<?php echo htmlspecialchars($user['profile_role_preference'] ?? ''); ?>">
-        </div>
-
-        <button type="submit" class="btn-primary">💾 Lưu thay đổi</button>
-      </form>
+<?php if (isset($_SESSION['flash_message'])): ?>
+    <div class="alert alert-success shadow-sm mb-4">
+        <?php echo htmlspecialchars($_SESSION['flash_message']); ?>
     </div>
-  </main>
+    <?php unset($_SESSION['flash_message']); ?>
+<?php endif; ?>
 
-  <script>
-  // Code JS này không đổi, nó vẫn hoạt động đúng
-  const avatarInput = document.getElementById('avatarInput');
-  const avatarPreview = document.getElementById('avatarPreview');
-  const avatarForm = document.getElementById('avatarForm');
+<div class="row">
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Ảnh đại diện</h6>
+            </div>
+            <div class="card-body text-center">
+                
+                <img class="img-profile rounded-circle mb-3" 
+                     src="<?php echo htmlspecialchars($user_avatar); ?>" 
+                     alt="Avatar" 
+                     style="max-width: 150px; height: 150px; object-fit: cover;">
+                
+                <form id="avatarForm" action="index.php?action=upload_avatar" method="POST" enctype="multipart/form-data" class="d-none">
+                    <input type="file" id="avatarInput" name="avatar" accept="image/*">
+                </form>
 
-  avatarInput.addEventListener('change', () => {
-    if (avatarInput.files && avatarInput.files[0]) {
-      const reader = new FileReader();
-      reader.onload = e => avatarPreview.src = e.target.result;
-      reader.readAsDataURL(avatarInput.files[0]);
-      setTimeout(() => avatarForm.submit(), 400); // Submit form
+                <button type="button" class="btn btn-secondary btn-sm" 
+                        onclick="document.getElementById('avatarInput').click();">
+                    <i class="fas fa-upload fa-sm"></i> Thay đổi ảnh
+                </button>
+                <p class="small mt-2">Chọn ảnh để tự động tải lên.</p>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Thông tin của bạn</h6>
+            </div>
+            <div class="card-body">
+                
+                <form action="index.php?action=update_profile" method="POST">
+                    
+                    <h6 class="text-secondary">Thông tin cơ bản</h6>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>Tên người dùng:</label>
+                            <input type="text" class="form-control" value="<?php echo htmlspecialchars($user['username']); ?>" disabled>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>Email:</label>
+                            <input type="email" class="form-control" value="<?php echo htmlspecialchars($user['email']); ?>" disabled>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h6 class="text-secondary">Thông tin hồ sơ (Dùng để ghép nhóm)</h6>
+
+                    <div class="form-group">
+                        <label for="major">Ngành học:</label>
+                        <input type="text" class="form-control" id="major" name="profile_major" 
+                               value="<?php echo htmlspecialchars($user['profile_major'] ?? ''); ?>">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="skills">Các kỹ năng (vd: Lập trình, Thuyết trình...):</label>
+                        <textarea class="form-control" id="skills" name="profile_skills" rows="3"><?php echo htmlspecialchars($user['profile_skills'] ?? ''); ?></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="interests">Sở thích:</label>
+                        <textarea class="form-control" id="interests" name="profile_interests" rows="2"><?php echo htmlspecialchars($user['profile_interests'] ?? ''); ?></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="strengths">Điểm mạnh:</label>
+                        <textarea class="form-control" id="strengths" name="profile_strengths" rows="2"><?php echo htmlspecialchars($user['profile_strengths'] ?? ''); ?></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="weaknesses">Điểm yếu:</label>
+                        <textarea class="form-control" id="weaknesses" name="profile_weaknesses" rows="2"><?php echo htmlspecialchars($user['profile_weaknesses'] ?? ''); ?></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="role">Vai trò mong muốn trong nhóm (vd: Leader, Coder, Designer...):</label>
+                        <input type="text" class="form-control" id="role" name="profile_role_preference" 
+                               value="<?php echo htmlspecialchars($user['profile_role_preference'] ?? ''); ?>">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-icon-split mt-3">
+                        <span class="icon text-white-50"><i class="fas fa-save"></i></span>
+                        <span class="text">Lưu thay đổi</span>
+                    </button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const avatarInput = document.getElementById('avatarInput');
+    if(avatarInput) {
+        avatarInput.addEventListener('change', () => {
+            if (avatarInput.files && avatarInput.files[0]) {
+                // Tự động submit form #avatarForm khi có file được chọn
+                document.getElementById('avatarForm').submit();
+            }
+        });
     }
-  });
-  </script>
-</body>
-</html>
+});
+</script>
+
+<?php
+// 2. Gọi Footer
+require 'app/views/layout/footer.php'; 
+?>
