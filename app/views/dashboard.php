@@ -1,30 +1,9 @@
 <?php
-// Tệp: app/views/dashboard.php (Bản NÂNG CẤP "Tuyệt hơn")
+// Tệp: app/views/dashboard.php (ĐÃ THÊM LINK VÀO CÁC THẺ)
 require 'app/views/layout/header.php'; 
 
-// LƯU Ý: Hiện tại, các thẻ và biểu đồ đang dùng DỮ LIỆU MẪU (DEMO DATA).
-// Sau khi layout này chạy, chúng ta sẽ kết nối nó với CSDL của bạn.
-
-// Dữ liệu mẫu cho 4 thẻ
-$card1_title = "Tổng số Nhóm";
-$card1_value = "4"; // (Dữ liệu mẫu)
-$card1_icon = "fa-layer-group";
-$card1_color = "primary";
-
-$card2_title = "Tổng số Task";
-$card2_value = "25"; // (Dữ liệu mẫu)
-$card2_icon = "fa-tasks";
-$card2_color = "success";
-
-$card3_title = "Task Cần Làm";
-$card3_value = "12"; // (Dữ liệu mẫu)
-$card3_icon = "fa-clipboard-list";
-$card3_color = "info";
-
-$card4_title = "Lời mời chờ";
-$card4_value = "2"; // (Dữ liệu mẫu)
-$card4_icon = "fa-envelope";
-$card4_color = "warning";
+// LƯU Ý: Các biến $card1_title, $card1_value... và $pieChartData
+// giờ đã được index.php (controller logic) cung cấp khi tải trang này.
 ?>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -32,71 +11,93 @@ $card4_color = "warning";
 </div>
 
 <div class="row">
+    <!-- Thẻ 1 (ĐÃ THÊM LINK) -->
     <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-<?php echo $card1_color; ?> shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-<?php echo $card1_color; ?> text-uppercase mb-1">
-                            <?php echo $card1_title; ?></div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $card1_value; ?></div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas <?php echo $card1_icon; ?> fa-2x text-gray-300"></i>
+        <!-- (MỚI) Bọc thẻ <a> bên ngoài -->
+        <a href="index.php?page=groups" class="text-decoration-none">
+            <div class="card border-left-<?php echo $card1_color; ?> shadow h-100 py-2 card-hover">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-<?php echo $card1_color; ?> text-uppercase mb-1">
+                                <?php echo $card1_title; ?></div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $card1_value; ?></div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas <?php echo $card1_icon; ?> fa-2x text-gray-300"></i>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
+    
+    <!-- Thẻ 2 (ĐÃ THÊM LINK) -->
     <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-<?php echo $card2_color; ?> shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-<?php echo $card2_color; ?> text-uppercase mb-1">
-                            <?php echo $card2_title; ?></div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $card2_value; ?></div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas <?php echo $card2_icon; ?> fa-2x text-gray-300"></i>
+        <!-- (MỚI) Bọc thẻ <a> bên ngoài -->
+        <a href="index.php?page=groups" class="text-decoration-none">
+            <div class="card border-left-<?php echo $card2_color; ?> shadow h-100 py-2 card-hover">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-<?php echo $card2_color; ?> text-uppercase mb-1">
+                                <?php echo $card2_title; ?></div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $card2_value; ?></div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas <?php echo $card2_icon; ?> fa-2x text-gray-300"></i>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
+    
+    <!-- Thẻ 3 (ĐÃ THÊM LINK) -->
     <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-<?php echo $card3_color; ?> shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-<?php echo $card3_color; ?> text-uppercase mb-1">
-                            <?php echo $card3_title; ?></div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $card3_value; ?></div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas <?php echo $card3_icon; ?> fa-2x text-gray-300"></i>
+        <!-- (MỚI) Bọc thẻ <a> bên ngoài -->
+        <a href="index.php?page=pending_tasks" class="text-decoration-none">
+            <div class="card border-left-<?php echo $card3_color; ?> shadow h-100 py-2 card-hover">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-<?php echo $card3_color; ?> text-uppercase mb-1">
+                                <?php echo $card3_title; ?></div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $card3_value; ?></div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas <?php echo $card3_icon; ?> fa-2x text-gray-300"></i>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
+    
+    <!-- Thẻ 4 (ĐÃ THÊM LINK) -->
     <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-<?php echo $card4_color; ?> shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-<?php echo $card4_color; ?> text-uppercase mb-1">
-                            <?php echo $card4_title; ?></div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $card4_value; ?></div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas <?php echo $card4_icon; ?> fa-2x text-gray-300"></i>
+        <!-- (MỚI) Bọc thẻ <a> bên ngoài -->
+        <a href="index.php?page=groups" class="text-decoration-none">
+            <div class="card border-left-<?php echo $card4_color; ?> shadow h-100 py-2 card-hover">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-<?php echo $card4_color; ?> text-uppercase mb-1">
+                                <?php echo $card4_title; ?></div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $card4_value; ?></div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas <?php echo $card4_icon; ?> fa-2x text-gray-300"></i>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
-</div> <div class="row">
+</div> 
+
+<div class="row">
+    <!-- Biểu đồ Đường (Vẫn là Dữ liệu mẫu) -->
     <div class="col-xl-8 col-lg-7">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
@@ -110,24 +111,38 @@ $card4_color = "warning";
         </div>
     </div>
 
+    <!-- Biểu đồ Tròn (Đã cập nhật Dữ liệu thật) -->
     <div class="col-xl-4 col-lg-5">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Tình trạng Task</h6>
+                <h6 class="m-0 font-weight-bold text-primary">Tình trạng Task (Của bạn)</h6>
             </div>
             <div class="card-body">
                 <div class="chart-pie pt-4">
                     <canvas id="myPieChart"></canvas>
                 </div>
+                <!-- (SỬA LỖI) BỔ SUNG CHÚ THÍCH "REVIEW" -->
                 <div class="mt-4 text-center small">
                     <span class="mr-2"><i class="fas fa-circle text-secondary"></i> Backlog</span>
                     <span class="mr-2"><i class="fas fa-circle text-info"></i> In Progress</span>
+                    <span class="mr-2"><i class="fas fa-circle text-warning"></i> Review</span>
                     <span class="mr-2"><i class="fas fa-circle text-success"></i> Done</span>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- (MỚI) Thêm CSS cho hiệu ứng Hover -->
+<style>
+.card-hover {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.card-hover:hover {
+    transform: translateY(-5px); /* Hiệu ứng nhấc lên */
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important; /* Đổ bóng rõ hơn */
+}
+</style>
 
 <script>
 // Chờ 1 chút để Chart.js được tải xong (từ footer.php)
@@ -159,26 +174,20 @@ document.addEventListener("DOMContentLoaded", function() {
       return s.join(dec);
     }
 
-    // 1. BIỂU ĐỒ ĐƯỜNG (Area Chart) - Dữ liệu Mẫu
+    // 1. BIỂU ĐỒ ĐƯỜNG (Area Chart) - Dữ liệu Mẫu (Không đổi)
     var ctxArea = document.getElementById("myAreaChart");
     var myLineChart = new Chart(ctxArea, {
       type: 'line',
       data: {
-        // Dữ liệu mẫu (7 ngày)
         labels: ["Ngày 1", "Ngày 2", "Ngày 3", "Ngày 4", "Ngày 5", "Ngày 6", "Ngày 7"],
         datasets: [{
           label: "Số Task Mới",
           lineTension: 0.3,
-          backgroundColor: "rgba(95, 77, 238, 0.05)", // Màu tím nhạt
-          borderColor: "#5f4dee", // Màu tím
+          backgroundColor: "rgba(95, 77, 238, 0.05)",
+          borderColor: "#5f4dee",
           pointRadius: 3,
           pointBackgroundColor: "#5f4dee",
           pointBorderColor: "#5f4dee",
-          pointHoverRadius: 3,
-          pointHoverBackgroundColor: "#5f4dee",
-          pointHoverBorderColor: "#5f4dee",
-          pointHitRadius: 10,
-          pointBorderWidth: 2,
           data: [0, 2, 1, 3, 2, 5, 4], // Dữ liệu mẫu
         }],
       },
@@ -205,17 +214,24 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
 
-    // 2. BIỂU ĐỒ TRÒN (Pie Chart / Doughnut) - Dữ liệu Mẫu
+    // 2. BIỂU ĐỒ TRÒN (Pie Chart / Doughnut) - (SỬA LỖI DỮ LIỆU)
     var ctxPie = document.getElementById("myPieChart");
     var myPieChart = new Chart(ctxPie, {
       type: 'doughnut',
       data: {
-        // Dữ liệu mẫu (Tình trạng Task)
-        labels: ["Backlog", "In Progress", "Done"],
+        // (SỬA) Lấy dữ liệu từ PHP
+        labels: ["Backlog", "In Progress", "Review", "Done"],
         datasets: [{
-          data: [5, 3, 10], // Dữ liệu mẫu
-          backgroundColor: ['#858796', '#36b9cc', '#1cc88a'],
-          hoverBackgroundColor: ['#6c6e7e', '#2c9faf', '#17a673'],
+          // (SỬA) Dùng biến $pieChartData từ index.php
+          data: [
+            <?php echo $pieChartData['backlog'] ?? 0; ?>, 
+            <?php echo $pieChartData['in_progress'] ?? 0; ?>,
+            <?php echo $pieChartData['review'] ?? 0; ?>,
+            <?php echo $pieChartData['done'] ?? 0; ?>
+          ], 
+          // (SỬA) Thêm màu cho Review
+          backgroundColor: ['#858796', '#36b9cc', '#f6c23e', '#1cc88a'], 
+          hoverBackgroundColor: ['#6c6e7e', '#2c9faf', '#dda20a', '#17a673'],
           hoverBorderColor: "rgba(234, 236, 244, 1)",
         }],
       },

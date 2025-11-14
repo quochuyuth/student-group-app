@@ -8,7 +8,7 @@ class Task {
         $this->db = $db;
     }
 
-    // ... (Giữ nguyên các hàm: create, getTasksByGroupId, updateStatus, getTaskById, getCommentsByTaskId, addComment) ...
+    // ... (Tất cả các hàm cũ của bạn: create, getTasksByGroupId, updateStatus, v.v...) ...
     public function create($data) {
         $sql = "INSERT INTO tasks (group_id, task_title, task_description, priority, created_by_user_id, assigned_to_user_id, due_date, points)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -69,12 +69,7 @@ class Task {
             return $stmt->execute([$task_id, $user_id, $comment_text]);
         } catch (PDOException $e) { return false; }
     }
-
-    // ===================================================
-    // HÀM MỚI 1: GẮN FILE VÀO TASK
-    // ===================================================
     public function attachFile($task_id, $group_id, $user_id, $file_name, $file_path, $file_size, $file_type) {
-        // Chỉ INSERT vào bảng 'files', trỏ đến 'task_id'
         $sql = "INSERT INTO files (group_id, uploaded_by_user_id, file_name, file_path, file_size, file_type, task_id)
                 VALUES (?, ?, ?, ?, ?, ?, ?)";
         
@@ -85,10 +80,6 @@ class Task {
             return false;
         }
     }
-
-    // ===================================================
-    // HÀM MỚI 2: LẤY CÁC FILE CỦA TASK
-    // ===================================================
     public function getFilesByTaskId($task_id) {
         $sql = "SELECT file_id, file_name, file_path, file_type
                 FROM files
@@ -97,6 +88,81 @@ class Task {
         
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$task_id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    public function getTotalTasksByUserId($user_id) {
+        $sql = "SELECT COUNT(task_id) FROM tasks WHERE assigned_to_user_id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$user_id]);
+        return $stmt->fetchColumn();
+    }
+    public function getPendingTasksByUserId($user_id) {
+        $sql = "SELECT COUNT(task_id) FROM tasks 
+                WHERE assigned_to_user_id = ? 
+                AND status != 'done'";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$user_id]);
+        return $stmt->fetchColumn();
+    }
+    public function getTaskProgressByUserId($user_id) {
+        $sql = "SELECT status, COUNT(task_id) as count
+                FROM tasks
+                WHERE assigned_to_user_id = ?
+                GROUP BY status";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$user_id]);
+        
+        $progress = [
+            'backlog' => 0, 'in_progress' => 0,
+            'review' => 0, 'done' => 0
+        ];
+        
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($results as $row) {
+            if (isset($progress[$row['status']])) {
+                $progress[$row['status']] = $row['count'];
+            }
+        }
+        return $progress;
+    }
+
+    // ===================================================
+    // HÀM MỚI 6 (CHO CHUÔNG THÔNG BÁO): LẤY TASK SẮP HẾT HẠN
+    // ===================================================
+    public function getUpcomingDueTasks($user_id, $days_limit = 3) {
+        $sql = "SELECT t.task_id, t.task_title, t.due_date, g.group_id, g.group_name
+                FROM tasks t
+                JOIN groups g ON t.group_id = g.group_id
+                WHERE t.assigned_to_user_id = ?
+                AND t.status != 'done'
+                AND t.due_date IS NOT NULL
+                AND t.due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL ? DAY)
+                ORDER BY t.due_date ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$user_id, $days_limit]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    // ===================================================
+    // HÀM MỚI 7 (CHO TRANG all_tasks): LẤY TẤT CẢ TASK (CÓ LỌC)
+    // ===================================================
+    public function getAllTasksByUserId($user_id, $filter_status = null) {
+        $sql = "SELECT t.*, g.group_name
+                FROM tasks t
+                JOIN groups g ON t.group_id = g.group_id
+                WHERE t.assigned_to_user_id = ?";
+        
+        $params = [$user_id];
+        
+        if ($filter_status == 'pending') {
+            $sql .= " AND t.status != 'done'";
+        }
+        
+        $sql .= " ORDER BY t.due_date ASC, t.priority DESC";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

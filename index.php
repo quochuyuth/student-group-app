@@ -1,16 +1,37 @@
 <?php
-// index.php (ĐÃ CẬP NHẬT)
+// index.php (ĐÃ SỬA LỖI CHUÔNG THÔNG BÁO)
 
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 session_start();
-require_once 'config/database.php';
+require_once 'config/database.php'; // $db được tạo ở đây
+
+// ===================================================
+// (MỚI) LOGIC LẤY THÔNG BÁO TOÀN TRANG
+// Chúng ta lấy thông báo ở đây, $db đã có sẵn
+// ===================================================
+$upcoming_tasks = [];
+$notification_count = 0;
+// Chỉ lấy thông báo nếu người dùng đã đăng nhập
+if (isset($_SESSION['user_id'])) {
+    // Tải Task Model
+    require_once 'app/models/Task.php';
+    // Khởi tạo model với $db
+    $taskModelForHeader = new Task($db); 
+    // Lấy task (hàm này đã có trong model)
+    $upcoming_tasks = $taskModelForHeader->getUpcomingDueTasks($_SESSION['user_id'], 3); 
+    $notification_count = count($upcoming_tasks);
+}
+// ===================================================
+// (KẾT THÚC LOGIC MỚI)
+// ===================================================
+
 
 $page = isset($_GET['page']) ? $_GET['page'] : 'home';
 $action = isset($_GET['action']) ? $_GET['action'] : null;
 
 if ($action) {
-    // PHẦN ACTION
+    // PHẦN ACTION (Không đổi)
     switch ($action) {
         case 'register': case 'login': case 'logout':
             require_once 'app/controllers/AuthController.php';
@@ -77,13 +98,13 @@ if ($action) {
         case 'send_message': 
         case 'send_file':
         case 'handleReaction':
-        case 'getNewMessages': // *** (THÊM MỚI) ***
+        case 'getNewMessages': 
             require_once 'app/controllers/ChatController.php';
             $chatController = new ChatController($db);
             if ($action == 'send_message') $chatController->sendMessage();
             if ($action == 'send_file') $chatController->sendFile();
             if ($action == 'handleReaction') $chatController->handleReaction();
-            if ($action == 'getNewMessages') $chatController->getNewMessages(); // *** (THÊM MỚI) ***
+            if ($action == 'getNewMessages') $chatController->getNewMessages(); 
             break;
             
         case 'create_poll': case 'submit_vote':
@@ -95,11 +116,49 @@ if ($action) {
     }
 } 
 else {
-    // PHẦN PAGE (Không thay đổi)
+    // PHẦN PAGE (Không đổi)
     switch ($page) {
         case 'register': require 'app/views/auth/register.php'; break;
         case 'login': case 'home': default: require 'app/views/auth/login.php'; break;
-        case 'dashboard': require 'app/views/dashboard.php'; break;
+        
+        case 'dashboard':
+            require_once 'app/models/Group.php';
+            require_once 'app/models/Task.php';
+            $groupModel = new Group($db);
+            $taskModel = new Task($db);
+            
+            if (isset($_SESSION['user_id'])) {
+                $user_id = $_SESSION['user_id'];
+                
+                $card1_title = "Tổng số Nhóm";
+                $card1_value = count($groupModel->getGroupsByUserId($user_id));
+                $card1_icon = "fa-layer-group";
+                $card1_color = "primary";
+
+                $card2_title = "Tổng số Task";
+                $card2_value = $taskModel->getTotalTasksByUserId($user_id); 
+                $card2_icon = "fa-tasks";
+                $card2_color = "success";
+
+                $card3_title = "Task Cần Làm";
+                $card3_value = $taskModel->getPendingTasksByUserId($user_id); 
+                $card3_icon = "fa-clipboard-list";
+                $card3_color = "info";
+
+                $card4_title = "Lời mời chờ";
+                $card4_value = count($groupModel->getPendingInvitationsByUserId($user_id));
+                $card4_icon = "fa-envelope";
+                $card4_color = "warning";
+                
+                $pieChartData = $taskModel->getTaskProgressByUserId($user_id);
+
+            } else {
+                header('Location: index.php?page=login');
+                exit;
+            }
+
+            require 'app/views/dashboard.php'; 
+            break;
         
         case 'profile':
             require_once 'app/controllers/UserController.php';
@@ -160,6 +219,17 @@ else {
 
         case 'anonymous_feedback':
             require 'app/views/anonymous_feedback.php';
+            break;
+            
+        case 'all_tasks':
+            require_once 'app/controllers/TaskController.php';
+            $taskController = new TaskController($db);
+            $taskController->showAllTasks(); // Lấy tất cả
+            break;
+        case 'pending_tasks':
+            require_once 'app/controllers/TaskController.php';
+            $taskController = new TaskController($db);
+            $taskController->showAllTasks('pending'); // Chỉ lấy task Cần làm
             break;
     }
 }

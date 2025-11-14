@@ -1,10 +1,17 @@
 <?php
-// Tệp: app/views/layout/header.php (Bản SỬA LỖI cho SB Admin 2)
+// Tệp: app/views/layout/header.php (ĐÃ SỬA LỖI BIẾN GLOBAL)
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
+
+// (SỬA LỖI) Thêm 'global' để lấy biến từ index.php
+// ngay cả khi được gọi từ bên trong một Controller
+global $upcoming_tasks, $notification_count; 
+
 if (!isset($_SESSION['user_id'])) {
     header('Location: index.php?page=login');
     exit;
 }
+
+// Các biến này được $SESSION hoặc $_GET cung cấp, nên an toàn
 $user_avatar = $_SESSION['user_avatar'] ?? 'http://localhost/StudentGroupApp/public/img/undraw_profile.svg'; 
 $username = $_SESSION['username'] ?? 'User';
 $current_page = $_GET['page'] ?? 'dashboard';
@@ -44,6 +51,14 @@ $current_page = $_GET['page'] ?? 'dashboard';
                     <i class="fas fa-fw fa-layer-group"></i><span>Các nhóm của tôi</span>
                 </a>
             </li>
+            
+            <!-- (MỚI) Link đến Task Cần Làm -->
+            <li class="nav-item <?php echo (in_array($current_page, ['all_tasks', 'pending_tasks'])) ? 'active' : ''; ?>">
+                <a class="nav-link" href="index.php?page=pending_tasks">
+                    <i class="fas fa-fw fa-tasks"></i><span>Task của tôi</span>
+                </a>
+            </li>
+            
             <li class="nav-item <?php echo ($current_page == 'edit_profile' || $current_page == 'profile') ? 'active' : ''; ?>">
                 <a class="nav-link" href="index.php?page=edit_profile">
                     <i class="fas fa-fw fa-user-cog"></i><span>Hồ sơ của tôi</span>
@@ -64,15 +79,78 @@ $current_page = $_GET['page'] ?? 'dashboard';
                 <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
                     <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3"><i class="fa fa-bars"></i></button>
                     <ul class="navbar-nav ml-auto">
+
+                        <!-- Nav Item - Alerts -->
+                        <li class="nav-item dropdown no-arrow mx-1">
+                            <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fas fa-bell fa-fw"></i>
+                                <!-- (SỬA) Hiển thị số lượng thông báo -->
+                                <?php if ($notification_count > 0): ?>
+                                    <span class="badge badge-danger badge-counter"><?php echo $notification_count; ?></span>
+                                <?php endif; ?>
+                            </a>
+                            <!-- Dropdown - Alerts -->
+                            <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
+                                aria-labelledby="alertsDropdown">
+                                <h6 class="dropdown-header">
+                                    Trung tâm Thông báo
+                                </h6>
+                                
+                                <!-- (SỬA) Dùng vòng lặp PHP để hiển thị thông báo -->
+                                <?php if ($notification_count > 0): ?>
+                                    <?php foreach ($upcoming_tasks as $task): ?>
+                                        <a class="dropdown-item d-flex align-items-center" href="index.php?page=group_details&id=<?php echo $task['group_id']; ?>">
+                                            <div class="mr-3">
+                                                <div class="icon-circle bg-warning">
+                                                    <i class="fas fa-exclamation-triangle text-white"></i>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div class="small text-gray-500">Hết hạn: <?php echo date('d/m/Y', strtotime($task['due_date'])); ?></div>
+                                                <span class="font-weight-bold">
+                                                    (<?php echo htmlspecialchars($task['group_name']); ?>) - <?php echo htmlspecialchars($task['task_title']); ?>
+                                                </span>
+                                            </div>
+                                        </a>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <a class="dropdown-item d-flex align-items-center" href="#">
+                                        <div class="mr-3">
+                                            <div class="icon-circle bg-success">
+                                                <i class="fas fa-check text-white"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div class="small text-gray-500">Tuyệt vời!</div>
+                                            <span class="font-weight-bold">Không có task nào sắp hết hạn.</span>
+                                        </div>
+                                    </a>
+                                <?php endif; ?>
+                                
+                                <a class="dropdown-item text-center small text-gray-500" href="index.php?page=pending_tasks">
+                                    Hiển thị tất cả Task cần làm
+                                </a>
+                            </div>
+                        </li>
+
+                        <div class="topbar-divider d-none d-sm-block"></div>
+
+                        <!-- Nav Item - User Information -->
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="mr-2 d-none d-lg-inline text-gray-600 small"><?php echo htmlspecialchars($username); ?></span>
                                 <img class="img-profile rounded-circle" src="<?php echo htmlspecialchars($user_avatar); ?>">
                             </a>
-                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                            <!-- Dropdown - User Information -->
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
+                                aria-labelledby="userDropdown">
+                                <a class="dropdown-item" href="index.php?page=profile">
+                                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i> Xem Hồ sơ
+                                </a>
                                 <a class="dropdown-item" href="index.php?page=edit_profile">
-                                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i> Hồ sơ
+                                    <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i> Chỉnh sửa Hồ sơ
                                 </a>
                                 <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">

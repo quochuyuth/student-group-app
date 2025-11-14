@@ -12,7 +12,7 @@ class TaskController {
         $this->taskModel = new Task($this->db);
     }
 
-    // ... (Giữ nguyên hàm: create, updateStatus, addComment) ...
+    // ... (Các hàm cũ: create, updateStatus, getDetails, addComment, attachFile) ...
     public function create() {
         if (!isset($_SESSION['user_id']) || $_SERVER['REQUEST_METHOD'] != 'POST') {
             header('Location: index.php?page=login'); exit;
@@ -84,10 +84,6 @@ class TaskController {
         }
         exit;
     }
-
-    /**
-     * CẬP NHẬT HÀM NÀY: Lấy chi tiết (thêm logic lấy files)
-     */
     public function getDetails() {
         if (!isset($_SESSION['user_id'])) {
             http_response_code(403);
@@ -97,9 +93,7 @@ class TaskController {
         
         $task = $this->taskModel->getTaskById($task_id);
         $comments = $this->taskModel->getCommentsByTaskId($task_id);
-        
-        // LẤY FILE (MỚI)
-        $files = $this->taskModel->getFilesByTaskId($task_id);
+        $files = $this->taskModel->getFilesByTaskId($task_id); 
 
         header('Content-Type: application/json');
         if ($task) {
@@ -107,7 +101,7 @@ class TaskController {
                 'success' => true,
                 'task' => $task,
                 'comments' => $comments,
-                'files' => $files // TRẢ VỀ DANH SÁCH FILE
+                'files' => $files 
             ]);
         } else {
             http_response_code(404);
@@ -115,10 +109,6 @@ class TaskController {
         }
         exit;
     }
-
-    // ===================================================
-    // HÀM MỚI: GẮN FILE VÀO TASK
-    // ===================================================
     public function attachFile() {
         if (!isset($_SESSION['user_id']) || $_SERVER['REQUEST_METHOD'] != 'POST') {
             header('Location: index.php?page=login');
@@ -129,7 +119,6 @@ class TaskController {
         $group_id = (int)$_POST['group_id'];
         $user_id = $_SESSION['user_id'];
         
-        // Quay lại trang chi tiết nhóm (và lý tưởng là mở modal)
         $redirect_url = "Location: index.php?page=group_details&id=" . $group_id;
         
         if (!isset($_FILES['task_file']) || $_FILES['task_file']['error'] != UPLOAD_ERR_OK) {
@@ -157,8 +146,28 @@ class TaskController {
             $_SESSION['flash_message'] = "Lỗi: Không thể di chuyển file đã upload.";
         }
         
-        // Chúng ta không thể tự mở Modal, nhưng có thể báo thành công
         header($redirect_url); exit;
+    }
+
+    // ===================================================
+    // HÀM MỚI (CHO TRANG all_tasks): HIỂN THỊ TẤT CẢ TASK
+    // ===================================================
+    public function showAllTasks($filter_status = null) {
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: index.php?page=login');
+            exit;
+        }
+        
+        $user_id = $_SESSION['user_id'];
+        $tasks = $this->taskModel->getAllTasksByUserId($user_id, $filter_status);
+        
+        if ($filter_status == 'pending') {
+            $page_title = "Các Task Cần Làm (Chưa Hoàn Thành)";
+        } else {
+            $page_title = "Tất Cả Task Của Bạn";
+        }
+        
+        require 'app/views/all_tasks.php';
     }
 }
 ?>
