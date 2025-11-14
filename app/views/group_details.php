@@ -1,11 +1,10 @@
 <?php
-// Tệp: app/views/group_details.php (Bản HOÀN THIỆN với SB Admin 2)
+// Tệp: app/views/group_details.php (ĐÃ TÁCH CHAT - Trang Kanban)
 
 // 1. Gọi Header
 require 'app/views/layout/header.php'; 
 
-// Các biến $group, $tasks, $members, $messages, $polls, $user_votes, $chat_files
-// đã được GroupController tải
+// Các biến $group, $tasks, $members được GroupController->show() tải
 ?>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -96,162 +95,9 @@ require 'app/views/layout/header.php';
             </div>
         </div>
     </div>
-</div> <div class="row">
+</div> 
 
-    <div class="col-lg-7">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-comments"></i> Chat Nhóm</h6>
-            </div>
-            <div class="card-body">
-                <div id="chat-box" class="border rounded p-3 bg-light" style="height: 450px; overflow-y: auto;">
-                    <?php if (empty($messages)): ?>
-                        <p class="text-muted text-center">Chưa có tin nhắn nào.</p>
-                    <?php else: ?>
-                        <?php foreach ($messages as $msg): ?>
-                            <?php $isUserClass = ($msg['sender_user_id'] == $_SESSION['user_id']) ? 'bg-primary text-white ml-auto' : 'bg-white'; ?>
-                            <?php $isPollClass = !empty($msg['poll_id']) ? 'bg-light border-primary' : ''; ?>
-                            
-                            <div class="card mb-2 shadow-sm <?php echo $isUserClass; ?> <?php echo $isPollClass; ?>" style="max-width: 85%;">
-                                <div class="card-body py-2 px-3">
-                                    <strong class="d-block"><?php echo htmlspecialchars($msg['sender_name']); ?>:</strong>
-                                    
-                                    <?php if (!empty($msg['file_id'])): ?>
-                                        <p class="mb-0">Đã gửi một file: 
-                                            <a class="<?php echo ($msg['sender_user_id'] == $_SESSION['user_id']) ? 'text-white' : 'text-primary'; ?>" 
-                                               href="<?php echo htmlspecialchars($msg['file_path']); ?>" target="_blank">
-                                               <i class="fas fa-file-download"></i> <?php echo htmlspecialchars($msg['file_name']); ?>
-                                            </a>
-                                        </p>
-                                    <?php elseif (!empty($msg['poll_id'])): ?>
-                                        <?php
-                                        $current_poll = null;
-                                        foreach ($polls as $poll) {
-                                            if ($poll['poll_id'] == $msg['poll_id']) { $current_poll = $poll; break; }
-                                        }
-                                        ?>
-                                        <?php if ($current_poll): ?>
-                                            <div class="poll-container-in-chat mt-2">
-                                                <strong><?php echo htmlspecialchars($current_poll['poll_question']); ?></strong>
-                                                <form action="index.php?action=submit_vote" method="POST" class="mt-2">
-                                                    <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
-                                                    <input type="hidden" name="poll_id" value="<?php echo $current_poll['poll_id']; ?>">
-                                                    <?php 
-                                                    $total_votes = 0;
-                                                    foreach ($current_poll['options'] as $opt) { $total_votes += $opt['vote_count']; }
-                                                    ?>
-                                                    <?php foreach ($current_poll['options'] as $option): ?>
-                                                        <?php 
-                                                        $user_voted_this = ($user_votes[$current_poll['poll_id']] ?? 0) == $option['option_id'];
-                                                        $vote_percent = ($total_votes > 0) ? ($option['vote_count'] / $total_votes) * 100 : 0;
-                                                        ?>
-                                                        <div class="poll-option position-relative small my-1">
-                                                            <div class="vote-bar bg-info" style="width: <?php echo $vote_percent; ?>%; height: 100%; position: absolute; left: 0; top: 0; opacity: 0.2;"></div>
-                                                            <div class="custom-control custom-radio position-relative p-2">
-                                                                <input type="radio" id="opt-<?php echo $option['option_id']; ?>" name="option_id" value="<?php echo $option['option_id']; ?>" class="custom-control-input" <?php echo $user_voted_this ? 'checked' : ''; ?> required>
-                                                                <label class="custom-control-label" for="opt-<?php echo $option['option_id']; ?>">
-                                                                    <?php echo htmlspecialchars($option['option_text']); ?> 
-                                                                    <span class="text-muted">(<?php echo $option['vote_count']; ?>)</span>
-                                                                </label>
-                                                            </div>
-                                                        </div>
-                                                    <?php endforeach; ?>
-                                                    <button type="submit" class="btn btn-primary btn-sm mt-2">Bầu chọn</button>
-                                                </form>
-                                            </div>
-                                        <?php endif; ?>
-                                    <?php else: ?>
-                                        <p class="mb-0"><?php echo nl2br(htmlspecialchars($msg['message_content'])); ?></p>
-                                    <?php endif; ?>
-                                    <small class="d-block text-right opacity-75 mt-1" style="font-size: 0.75rem;"><?php echo date('d/m H:i', strtotime($msg['created_at'])); ?></small>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-                
-                <div class="mt-3">
-                    <form id="chat-form" action="index.php?action=send_message" method="POST" class="d-flex">
-                        <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
-                        <input type="text" id="chat-message-input" name="message_content" class="form-control" placeholder="Gõ tin nhắn của bạn..." required autocomplete="off">
-                        
-                        <button type="button" class="btn btn-info ml-2" id="create-poll-btn" title="Tạo bình chọn" data-toggle="modal" data-target="#createPollModal">
-                            <i class="fas fa-poll"></i>
-                        </button>
-                        <button type="button" class="btn btn-secondary ml-2" id="file-upload-btn" title="Đính kèm file" onclick="document.getElementById('group_file_input').click();">
-                            <i class="fas fa-paperclip"></i>
-                        </button>
-                        <button type="submit" class="btn btn-primary ml-2"><i class="fas fa-paper-plane"></i></button>
-                    </form>
-                    <form id="hidden-file-form" action="index.php?action=send_file" method="POST" enctype="multipart/form-data" class="d-none">
-                        <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
-                        <input type="file" name="group_file" id="group_file_input" onchange="this.form.submit()">
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div> <div class="col-lg-5">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-info-circle"></i> Thông tin hội thoại</h6>
-            </div>
-            <div class="accordion" id="infoSidebarAccordion">
-                <div class="card mb-0">
-                    <div class="card-header py-3" id="headingMembers">
-                        <h6 class="mb-0">
-                            <button class="btn btn-link btn-block text-left text-dark font-weight-bold" type="button" data-toggle="collapse" data-target="#collapseMembers" aria-expanded="true" aria-controls="collapseMembers">
-                                Thành viên (<?php echo count($members); ?>)
-                            </button>
-                        </h6>
-                    </div>
-                    <div id="collapseMembers" class="collapse show" aria-labelledby="headingMembers" data-parent="#infoSidebarAccordion">
-                        <div class="card-body" style="max-height: 200px; overflow-y: auto;">
-                            <ul class="list-group list-group-flush">
-                                <?php foreach ($members as $member): ?>
-                                    <li class="list-group-item d-flex align-items-center p-1">
-                                        <img class="img-profile rounded-circle" src="public/img/undraw_profile.svg" style="width: 30px; height: 30px;">
-                                        <a href="index.php?page=profile&id=<?php echo $member['user_id']; ?>" class="ml-2 text-gray-800">
-                                            <?php echo htmlspecialchars($member['username']); ?>
-                                        </a>
-                                    </li>
-                                <?php endforeach; ?>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                <div class="card mb-0">
-                    <div class="card-header py-3" id="headingFiles">
-                        <h6 class="mb-0">
-                            <button class="btn btn-link btn-block text-left text-dark font-weight-bold collapsed" type="button" data-toggle="collapse" data-target="#collapseFiles" aria-expanded="false" aria-controls="collapseFiles">
-                                Kho lưu trữ file (<?php echo count($chat_files); ?>)
-                            </button>
-                        </h6>
-                    </div>
-                    <div id="collapseFiles" class="collapse" aria-labelledby="headingFiles" data-parent="#infoSidebarAccordion">
-                        <div class="card-body" style="max-height: 200px; overflow-y: auto;">
-                            <?php if (empty($chat_files)): ?>
-                                <p class="text-muted small">Chưa có file nào được gửi.</p>
-                            <?php else: ?>
-                                <ul class="list-group list-group-flush">
-                                <?php foreach ($chat_files as $file): ?>
-                                    <li class="list-group-item p-1">
-                                        <a href="<?php echo htmlspecialchars($file['file_path']); ?>" target="_blank" class="text-decoration-none">
-                                            <i class="fas fa-file-alt text-gray-500"></i>
-                                            <span class="text-primary small"><?php echo htmlspecialchars($file['file_name']); ?></span>
-                                            <span class_ ="d-block text-muted small">
-                                                Bởi: <?php echo htmlspecialchars($file['uploader_name']); ?>
-                                            </span>
-                                        </a>
-                                    </li>
-                                <?php endforeach; ?>
-                                </ul>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div> </div> <div class="card shadow mb-4">
+<div class="card shadow mb-4">
     <div class="card-header py-3">
         <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-tasks"></i> Bảng công việc (Kanban)</h6>
     </div>
@@ -270,7 +116,7 @@ require 'app/views/layout/header.php';
                     <div class="card-header bg-gray-300 py-3"><h6 class="m-0 font-weight-bold text-dark">Backlog</h6></div>
                     <div class="card-body kanban-column" id="col-backlog">
                         <?php foreach ($columns['backlog'] as $task): ?>
-                            <?php include 'app/views/partials/_task_card.php'; // Gọi file partial (sẽ tạo ở bước sau) ?>
+                            <?php include 'app/views/partials/_task_card.php'; ?>
                         <?php endforeach; ?>
                     </div>
                 </div>
@@ -307,7 +153,23 @@ require 'app/views/layout/header.php';
             </div>
         </div>
     </div>
-</div> <div class="row">
+</div> 
+
+<div class="row">
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Giao tiếp</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">Chat Nhóm</div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-comments fa-2x text-gray-300"></i></div>
+                </div>
+                <a href="index.php?page=group_chat&id=<?php echo $group['group_id']; ?>" class="stretched-link"></a>
+            </div>
+        </div>
+    </div>
     <div class="col-lg-3 col-md-6 mb-4">
         <div class="card border-left-info shadow h-100 py-2">
             <div class="card-body">
@@ -325,7 +187,13 @@ require 'app/views/layout/header.php';
     <div class="col-lg-3 col-md-6 mb-4">
         <div class="card border-left-warning shadow h-100 py-2">
             <div class="card-body">
-                (Tương tự cho "Họp nhóm")
+                 <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Lịch trình</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">Họp Nhóm</div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-calendar-alt fa-2x text-gray-300"></i></div>
+                </div>
                 <a href="index.php?page=group_meetings&group_id=<?php echo $group['group_id']; ?>" class="stretched-link"></a>
             </div>
         </div>
@@ -333,51 +201,18 @@ require 'app/views/layout/header.php';
     <div class="col-lg-3 col-md-6 mb-4">
         <div class="card border-left-success shadow h-100 py-2">
             <div class="card-body">
-                (Tương tự cho "Báo cáo")
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Thống kê</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">Báo cáo</div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-chart-bar fa-2x text-gray-300"></i></div>
+                </div>
                 <a href="index.php?page=group_report&group_id=<?php echo $group['group_id']; ?>" class="stretched-link"></a>
             </div>
         </div>
     </div>
-    <div class="col-lg-3 col-md-6 mb-4">
-        <div class="card border-left-danger shadow h-100 py-2">
-            <div class="card-body">
-                (Tương tự cho "Phản hồi ẩn danh")
-                <a href="index.php?page=anonymous_feedback&group_id=<?php echo $group['group_id']; ?>" class="stretched-link"></a>
-            </div>
-        </div>
-    </div>
-</div> <div class="modal fade" id="createPollModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalLabel">Tạo bình chọn mới</h5>
-                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">×</span>
-                </button>
-            </div>
-            <form action="index.php?action=create_poll" method="POST" id="create-poll-form">
-                <div class="modal-body">
-                    <input type="hidden" name="group_id" value="<?php echo $group['group_id']; ?>">
-                    <div class="form-group">
-                        <label for="poll_question_modal">Câu hỏi</label>
-                        <input type="text" name="poll_question" id="poll_question_modal" class="form-control" required>
-                    </div>
-                    <div class="form-group poll-options-modal">
-                        <label>Các lựa chọn</label>
-                        <input type="text" name="options[]" class="form-control mb-2" placeholder="Lựa chọn 1" required>
-                        <input type="text" name="options[]" class="form-control mb-2" placeholder="Lựa chọn 2">
-                        <input type="text" name="options[]" class="form-control mb-2" placeholder="Lựa chọn 3">
-                        </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-primary">Tạo Bình Chọn</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
+    </div> 
 
 <div class="modal fade" id="taskDetailsModal" tabindex="-1" role="dialog" aria-labelledby="taskModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
@@ -400,13 +235,12 @@ require 'app/views/layout/header.php';
     </div>
 </div>
 
-
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     
-    // --- 1. KÉO-THẢ KANBAN (Giữ nguyên logic của bạn) ---
+    // --- 1. KÉO-THẢ KANBAN (Giữ nguyên) ---
     const columnIds = ['col-backlog', 'col-in_progress', 'col-review', 'col-done'];
     columnIds.forEach(colId => {
         const column = document.getElementById(colId);
@@ -418,7 +252,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     const taskId = evt.item.dataset.taskId;
                     const newStatus = evt.to.id.replace('col-', '');
                     
-                    // Gửi AJAX (logic cũ của bạn)
                     fetch('index.php?action=update_task_status', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
@@ -428,7 +261,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     .then(data => {
                         if (!data.success) { 
                             console.error('Lỗi cập nhật trạng thái:', data.message); 
-                            // (Nên thêm code để kéo card về vị trí cũ nếu lỗi)
                         }
                     })
                     .catch(error => console.error('Lỗi fetch:', error));
@@ -437,25 +269,20 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // --- 2. MODAL CHI TIẾT TASK (AJAX) ---
-    // Dùng $() của jQuery (vì template đã tải sẵn)
+    // --- 2. MODAL CHI TIẾT TASK (Giữ nguyên) ---
     $('.task-card').on('click', function() {
         const taskId = $(this).data('task-id');
         const modalContent = $('#modal-task-content');
         
-        // Hiển thị modal
         $('#taskDetailsModal').modal('show');
-        // Set trạng thái đang tải
         modalContent.html('<p class="text-center">Đang tải chi tiết task...</p>');
 
-        // Gọi AJAX để lấy chi tiết
         fetch(`index.php?action=get_task_details&task_id=${taskId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Dựng HTML cho nội dung modal
                     const task = data.task;
-                    let filesHtml = '<p class_ ="small text-muted">Chưa có file.</p>';
+                    let filesHtml = '<p class="small text-muted">Chưa có file.</p>';
                     if (data.files && data.files.length > 0) {
                         filesHtml = '<ul class="list-group list-group-flush">';
                         data.files.forEach(file => {
@@ -477,7 +304,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         });
                     }
 
-                    // Chèn HTML vào Modal
                     modalContent.html(`
                         <h4 class="text-primary">${task.task_title}</h4>
                         <p><strong>Giao cho:</strong> ${task.assignee_name || 'Chưa có'} | <strong>Người tạo:</strong> ${task.creator_name || 'N/A'}</p>
@@ -516,7 +342,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Xử lý submit Form Comment (AJAX)
-    // (Vì form #add-comment-form được tạo động, ta phải bắt sự kiện submit từ #modal-task-content)
     $('#modal-task-content').on('submit', '#add-comment-form', function(e) {
         e.preventDefault();
         const form = $(this);
@@ -529,7 +354,6 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Thêm comment mới vào danh sách
                 const comment = data.comment;
                 const commentsContainer = $('#task-details-comments');
                 if (commentsContainer.find('.small.text-muted').length > 0) {
@@ -549,17 +373,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // --- 3. TỰ CUỘN CHAT (Giữ nguyên) ---
-    const chatBox = document.getElementById('chat-box');
-    if (chatBox) {
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
+    // --- (ĐÃ XÓA) Logic Chat scroll và Poll Modal ---
 });
 </script>
 
 <style>
 .kanban-column {
-    min-height: 400px; /* Đảm bảo cột có chiều cao tối thiểu */
+    min-height: 400px; 
     border-radius: 4px;
 }
 .task-card {

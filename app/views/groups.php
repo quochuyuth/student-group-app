@@ -1,7 +1,7 @@
 <?php
-// Tệp: app/views/groups.php (Bản HOÀN THIỆN với SB Admin 2)
+// Tệp: app/views/groups.php (ĐÃ THÊM NÚT CHAT)
 
-// 1. Gọi Header (tự động thêm menu, sidebar, CSS)
+// 1. Gọi Header
 require 'app/views/layout/header.php'; 
 
 // Các biến $groups và $invitations đã được GroupController tải
@@ -22,7 +22,6 @@ require 'app/views/layout/header.php';
 <div class="row">
 
     <div class="col-lg-6">
-
         <div class="card shadow mb-4">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-fw fa-envelope"></i> Lời mời đang chờ</h6>
@@ -83,8 +82,9 @@ require 'app/views/layout/header.php';
             </div>
         </div>
 
-    </div> <div class="col-lg-6">
+    </div> 
 
+    <div class="col-lg-6">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-fw fa-layer-group"></i> Các nhóm của bạn</h6>
@@ -95,20 +95,32 @@ require 'app/views/layout/header.php';
                 <?php else: ?>
                     <div class="list-group">
                         <?php foreach ($groups as $group): ?>
-                            <a href="index.php?page=group_details&id=<?php echo $group['group_id']; ?>" class="list-group-item list-group-item-action flex-column align-items-start">
+                            <div class="list-group-item list-group-item-action flex-column align-items-start">
                                 <div class="d-flex w-100 justify-content-between">
                                     <h5 class="mb-1 text-primary"><?php echo htmlspecialchars($group['group_name']); ?></h5>
                                     <small>Vai trò: <?php echo htmlspecialchars($group['role']); ?></small>
                                 </div>
                                 <p class="mb-1 text-gray-700"><?php echo htmlspecialchars($group['group_description']); ?></p>
-                            </a>
+                                
+                                <div class="mt-2 text-right">
+                                    <a href="index.php?page=group_chat&id=<?php echo $group['group_id']; ?>" class="btn btn-info btn-sm">
+                                        <i class="fas fa-comments"></i> Chat
+                                    </a>
+                                    <a href="index.php?page=group_details&id=<?php echo $group['group_id']; ?>" class="btn btn-primary btn-sm ml-1">
+                                        <i class="fas fa-cog"></i> Chi tiết
+                                    </a>
+                                </div>
+                                </div>
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
             </div>
         </div>
+    </div> 
 
-    </div> </div> <?php
+</div> 
+
+<?php
 // 2. Gọi Footer
 require 'app/views/layout/footer.php'; 
 ?>

@@ -10,7 +10,7 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'home';
 $action = isset($_GET['action']) ? $_GET['action'] : null;
 
 if ($action) {
-    // PHẦN ACTION
+    // PHẦN ACTION (Không thay đổi)
     switch ($action) {
         case 'register': case 'login': case 'logout':
             require_once 'app/controllers/AuthController.php';
@@ -20,15 +20,13 @@ if ($action) {
             if ($action == 'logout') $authController->logout();
             break;
         
-        // --- Nhóm các action của User ---
         case 'update_profile':
-        case 'upload_avatar':
+        case 'upload_avatar': 
             require_once 'app/controllers/UserController.php';
             $userController = new UserController($db);
             if ($action == 'update_profile') $userController->updateProfile();
-            if ($action == 'upload_avatar') $userController->uploadAvatar();
+            if ($action == 'upload_avatar') $userController->uploadAvatar(); 
             break;
-        // ---------------------------------
 
         case 'create_group': case 'invite_member': case 'accept_invitation': case 'reject_invitation':
             require_once 'app/controllers/GroupController.php';
@@ -48,7 +46,6 @@ if ($action) {
             if ($action == 'attach_file_to_task') $taskController->attachFile();
             break;
 
-        // == BẮT ĐẦU CÁC ACTION CỦA RUBRIC (Code của bạn) ==
         case 'submit_rubric':
             require_once 'app/controllers/RubricController.php';
             $rubricController = new RubricController($db);
@@ -59,22 +56,21 @@ if ($action) {
             $rubricController = new RubricController($db);
             $rubricController->submitFeedback();
             break;
-        case 'get_member_feedback': // Action để lấy phản hồi qua AJAX
+        case 'get_member_feedback': 
             require_once 'app/controllers/RubricController.php';
             $rubricController = new RubricController($db);
             $rubricController->getMemberFeedbackAjax();
             break;
-        case 'add_criteria': // Action CRUD mới
+        case 'add_criteria': 
             require_once 'app/controllers/RubricController.php';
             $rubricController = new RubricController($db);
             $rubricController->addCriteria();
             break;
-        case 'delete_criteria': // Action CRUD mới
+        case 'delete_criteria': 
             require_once 'app/controllers/RubricController.php';
             $rubricController = new RubricController($db);
             $rubricController->deleteCriteria();
             break;
-        // == KẾT THÚC CÁC ACTION CỦA RUBRIC ==
 
         case 'create_meeting': case 'save_minutes': case 'submit_meeting_rating':
             require_once 'app/controllers/MeetingController.php';
@@ -98,13 +94,12 @@ if ($action) {
     }
 } 
 else {
-    // PHẦN PAGE
+    // PHẦN PAGE (Đã thêm 'group_chat')
     switch ($page) {
         case 'register': require 'app/views/auth/register.php'; break;
         case 'login': case 'home': default: require 'app/views/auth/login.php'; break;
         case 'dashboard': require 'app/views/dashboard.php'; break;
         
-        // --- Tách Xem và Sửa Profile ---
         case 'profile':
             require_once 'app/controllers/UserController.php';
             $userController = new UserController($db);
@@ -115,7 +110,6 @@ else {
             $userController = new UserController($db);
             $userController->showEditProfile();
             break;
-        // -------------------------------
 
         case 'groups':
             require_once 'app/controllers/GroupController.php';
@@ -128,7 +122,14 @@ else {
             $groupController->show();
             break;
         
-        // --- (Code Rubric của bạn) ---
+        // *** (THÊM MỚI) ***
+        case 'group_chat':
+            require_once 'app/controllers/GroupController.php';
+            $groupController = new GroupController($db);
+            $groupController->showChat(); // <-- Gọi hàm mới
+            break;
+        // *** (HẾT PHẦN MỚI) ***
+        
         case 'group_rubric':
             require_once 'app/controllers/RubricController.php';
             $rubricController = new RubricController($db);
@@ -140,7 +141,6 @@ else {
             $rubricController = new RubricController($db);
             $rubricController->showManager();
             break;
-        // ------------------------------
             
         case 'group_meetings':
             require_once 'app/controllers/MeetingController.php';
@@ -159,11 +159,9 @@ else {
             $reportController->show();
             break;
 
-        // *** (THÊM MỚI CỦA TÔI) ***
         case 'anonymous_feedback':
             require 'app/views/anonymous_feedback.php';
             break;
-        // *** (HẾT PHẦN MỚI) ***
     }
 }
 ?>

@@ -24,7 +24,7 @@ class GroupController {
         $this->pollModel = new Poll($this->db);
     }
 
-    // ... (Giữ nguyên các hàm: index, create, inviteMember, acceptInvitation, rejectInvitation) ...
+    // ... (Giữ nguyên các hàm: create, inviteMember, acceptInvitation, rejectInvitation) ...
     public function index() {
         if (!isset($_SESSION['user_id'])) {
             header('Location: index.php?page=login'); exit;
@@ -59,7 +59,10 @@ class GroupController {
         $group_id = (int)$_POST['group_id'];
         $email_or_username = trim(strip_tags($_POST['email_or_username']));
         $inviter_user_id = $_SESSION['user_id'];
-        $redirect_url = "Location: index.php?page=group_details&id=$group_id";
+        
+        // SỬA: Redirect về trang chi tiết (nơi có form mời)
+        $redirect_url = "Location: index.php?page=group_details&id=$group_id"; 
+        
         $invitee = $this->userModel->findByEmail($email_or_username);
         if (!$invitee) { $invitee = $this->userModel->findByUsername($email_or_username); }
         if (!$invitee) {
@@ -114,7 +117,7 @@ class GroupController {
     }
 
     /**
-     * (CẬP NHẬT) Hiển thị trang chi tiết
+     * (KHÔNG ĐỔI) Hiển thị trang chi tiết (Kanban, Forms, Links)
      */
     public function show() {
         if (!isset($_SESSION['user_id'])) {
@@ -134,11 +137,42 @@ class GroupController {
             exit;
         }
         
+        // Trang này CHỈ cần Task và Members
         $tasks = $this->taskModel->getTasksByGroupId($group_id);
         $members = $this->groupModel->getMembersByGroupId($group_id);
-        $messages = $this->chatModel->getMessagesByGroupId($group_id);
         
+        // (Tối ưu: Không cần tải $messages, $polls, $chat_files ở đây nữa)
+        
+        require 'app/views/group_details.php';
+    }
+
+    /**
+     * *** (HÀM MỚI) ***
+     * Hiển thị trang CHAT (Tách biệt)
+     */
+    public function showChat() {
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: index.php?page=login');
+            exit;
+        }
+        $group_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if ($group_id == 0) {
+            header('Location: index.php?page=groups');
+            exit;
+        }
+        
+        $group = $this->groupModel->getGroupById($group_id);
+        if (!$group) {
+            $_SESSION['flash_message'] = "Không tìm thấy nhóm này.";
+            header('Location: index.php?page=groups');
+            exit;
+        }
+        
+        // Trang này CẦN TẤT CẢ
+        $members = $this->groupModel->getMembersByGroupId($group_id);
+        $messages = $this->chatModel->getMessagesByGroupId($group_id);
         $polls = $this->pollModel->getPollsByGroupId($group_id);
+        $chat_files = $this->chatModel->getChatFilesByGroupId($group_id); // Hàm này bạn cần tạo trong ChatModel
         
         $user_votes = [];
         foreach ($polls as $poll) {
@@ -147,11 +181,9 @@ class GroupController {
                 $user_votes[$poll['poll_id']] = $user_vote;
             }
         }
-
-        // *** (THÊM DÒNG NÀY) ***
-        $chat_files = $this->chatModel->getChatFilesByGroupId($group_id);
         
-        require 'app/views/group_details.php';
+        // Gọi file VIEW MỚI
+        require 'app/views/group_chat.php';
     }
 }
 ?>
