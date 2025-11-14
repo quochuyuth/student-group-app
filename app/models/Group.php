@@ -1,5 +1,5 @@
 <?php
-// app/models/Group.php
+// app/models/Group.php (ĐÃ CẬP NHẬT)
 
 class Group {
     private $db;
@@ -105,8 +105,11 @@ class Group {
         }
     }
     
+    /**
+     * (SỬA ĐỔI) Lấy thêm "role" (vai trò)
+     */
     public function getMembersByGroupId($group_id) {
-        $sql = "SELECT u.user_id, u.username 
+        $sql = "SELECT u.user_id, u.username, gm.role 
                 FROM users u
                 JOIN group_members gm ON u.user_id = gm.user_id
                 WHERE gm.group_id = ?";
@@ -117,7 +120,7 @@ class Group {
     }
 
     /**
-     * HÀM MỚI: Lấy vai trò (role) của 1 user cụ thể trong 1 nhóm
+     * (GIỮ NGUYÊN) Lấy vai trò (role) của 1 user cụ thể trong 1 nhóm
      */
     public function getUserRoleInGroup($group_id, $user_id) {
         $sql = "SELECT role FROM group_members 
@@ -127,6 +130,20 @@ class Group {
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
         return $result ? $result['role'] : null; // Trả về 'admin' hoặc 'member'
+    }
+
+    /**
+     * *** (HÀM MỚI) ***
+     * Xóa thành viên khỏi nhóm
+     */
+    public function removeMember($group_id, $user_id_to_remove) {
+        $sql = "DELETE FROM group_members WHERE group_id = ? AND user_id = ?";
+        $stmt = $this->db->prepare($sql);
+        try {
+            return $stmt->execute([$group_id, $user_id_to_remove]);
+        } catch (PDOException $e) {
+            return false;
+        }
     }
 }
 ?>

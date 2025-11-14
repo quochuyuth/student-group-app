@@ -1,5 +1,5 @@
 <?php
-// app/controllers/GroupController.php
+// app/controllers/GroupController.php (ĐÃ CẬP NHẬT)
 
 require_once 'app/models/Group.php';
 require_once 'app/models/User.php';
@@ -24,7 +24,7 @@ class GroupController {
         $this->pollModel = new Poll($this->db);
     }
 
-    // ... (Giữ nguyên các hàm: create, inviteMember, acceptInvitation, rejectInvitation) ...
+    // ... (Giữ nguyên các hàm: index, create, inviteMember, acceptInvitation, rejectInvitation) ...
     public function index() {
         if (!isset($_SESSION['user_id'])) {
             header('Location: index.php?page=login'); exit;
@@ -117,7 +117,7 @@ class GroupController {
     }
 
     /**
-     * (KHÔNG ĐỔI) Hiển thị trang chi tiết (Kanban, Forms, Links)
+     * (SỬA ĐỔI) Tải thêm vai trò của user
      */
     public function show() {
         if (!isset($_SESSION['user_id'])) {
@@ -137,18 +137,17 @@ class GroupController {
             exit;
         }
         
-        // Trang này CHỈ cần Task và Members
         $tasks = $this->taskModel->getTasksByGroupId($group_id);
         $members = $this->groupModel->getMembersByGroupId($group_id);
         
-        // (Tối ưu: Không cần tải $messages, $polls, $chat_files ở đây nữa)
-        
+        // (MỚI) Kiểm tra vai trò của user hiện tại
+        $current_user_role = $this->groupModel->getUserRoleInGroup($group_id, $_SESSION['user_id']);
+
         require 'app/views/group_details.php';
     }
 
     /**
-     * *** (HÀM MỚI) ***
-     * Hiển thị trang CHAT (Tách biệt)
+     * (SỬA ĐỔI) Tải thêm vai trò của user
      */
     public function showChat() {
         if (!isset($_SESSION['user_id'])) {
@@ -168,12 +167,19 @@ class GroupController {
             exit;
         }
         
-        // Trang này CẦN TẤT CẢ
+        $filter_user_id = $_GET['filter_user'] ?? null;
+        $filter_date_from = $_GET['filter_date_from'] ?? null;
+        $filter_date_to = $_GET['filter_date_to'] ?? null;
+
         $members = $this->groupModel->getMembersByGroupId($group_id);
         $messages = $this->chatModel->getMessagesByGroupId($group_id);
         $polls = $this->pollModel->getPollsByGroupId($group_id);
-        $chat_files = $this->chatModel->getChatFilesByGroupId($group_id); // Hàm này bạn cần tạo trong ChatModel
         
+        $chat_files = $this->chatModel->getChatFilesByGroupId($group_id, $filter_user_id, $filter_date_from, $filter_date_to);
+        
+        $message_ids = array_column($messages, 'message_id');
+        $reactions = $this->chatModel->getReactionsForMessages($message_ids);
+
         $user_votes = [];
         foreach ($polls as $poll) {
             $user_vote = $this->pollModel->getUserVote($poll['poll_id'], $_SESSION['user_id']);
@@ -181,9 +187,63 @@ class GroupController {
                 $user_votes[$poll['poll_id']] = $user_vote;
             }
         }
+
+        // (MỚI) Kiểm tra vai trò của user hiện tại
+        $current_user_role = $this->groupModel->getUserRoleInGroup($group_id, $_SESSION['user_id']);
         
-        // Gọi file VIEW MỚI
         require 'app/views/group_chat.php';
+    }
+
+    /**
+     * *** (HÀM MỚI) ***
+     * Xử lý xóa thành viên
+     */
+    public function removeMember() {
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: index.php?page=login'); exit;
+        }
+
+        // (SỬA LỖI) Lấy group_id và user_id từ POST (an toàn hơn GET)
+        $group_id = (int)$_POST['group_id'];
+        $user_id_to_remove = (int)$_POST['user_id'];
+        $current_user_id = $_SESSION['user_id'];
+        
+        // (MỚI) Xác định trang để quay lại (chat hoặc details)
+        $redirect_page = $_POST['redirect_page'] ?? 'group_details';
+        $redirect_url = "Location: index.php?page=" . $redirect_page . "&id=" . $group_id;
+
+
+        // Kiểm tra bảo mật:
+        // 1. User đang thực hiện có phải là admin của nhóm này không?
+        $role = $this->groupModel->getUserRoleInGroup($group_id, $current_user_id);
+
+        if ($role !== 'admin') {
+            $_SESSION['flash_message'] = "Lỗi: Bạn không có quyền thực hiện hành động này.";
+            header($redirect_url); exit;
+        }
+
+        // 2. Admin không thể tự xóa chính mình
+        if ($user_id_to_remove == $current_user_id) {
+            $_SESSION['flash_message'] = "Lỗi: Bạn không thể tự xóa chính mình.";
+            header($redirect_url); exit;
+        }
+        
+        // (SỬA LỖI) Kiểm tra xem người bị xóa có phải là admin khác không
+        $role_to_remove = $this->groupModel->getUserRoleInGroup($group_id, $user_id_to_remove);
+        if ($role_to_remove === 'admin') {
+             $_SESSION['flash_message'] = "Lỗi: Bạn không thể xóa một trưởng nhóm khác.";
+             header($redirect_url); exit;
+        }
+
+
+        // Thực hiện xóa
+        if ($this->groupModel->removeMember($group_id, $user_id_to_remove)) {
+            $_SESSION['flash_message'] = "Đã xóa thành viên khỏi nhóm.";
+        } else {
+            $_SESSION['flash_message'] = "Lỗi: Không thể xóa thành viên.";
+        }
+
+        header($redirect_url); exit;
     }
 }
 ?>
