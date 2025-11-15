@@ -226,6 +226,11 @@ else {
             $meetingController = new MeetingController($db);
             $meetingController->showDetails();
             break;
+        case 'join_meeting':
+    require_once 'app/controllers/MeetingController.php';
+    $meetingController = new MeetingController($db);
+    $meetingController->joinMeeting();
+    break;
 
         case 'group_report':
             require_once 'app/controllers/ReportController.php';
