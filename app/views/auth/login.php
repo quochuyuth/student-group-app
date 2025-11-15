@@ -21,7 +21,7 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
         }
         
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+             background: url('public/img/login-bg.jpg') center/cover no-repeat fixed;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -101,7 +101,7 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
             right: 0;
             bottom: 0;
             /* GÁN ẢNH TẠI ĐÂY: */
-            /* background: url('public/img/login-bg.jpg') center/cover; */
+             background: url('public/img/login-bg.jpg') center/cover; 
             opacity: 0.15;
             z-index: 0;
         }
