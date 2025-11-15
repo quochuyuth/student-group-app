@@ -8,11 +8,11 @@ class Meeting {
         $this->db = $db;
     }
 
-    // ... (Giữ nguyên các hàm: getMeetingsByGroupId, create, getMeetingById, updateMinutes) ...
+    // ... (Giữ nguyên các hàm: getMeetingsByGroupId, create) ...
     public function getMeetingsByGroupId($group_id) {
         $sql = "SELECT m.*, u.username AS creator_name
                 FROM meetings m
-                JOIN users u ON m.created_by_user_id = u.user_id
+                LEFT JOIN users u ON m.created_by_user_id = u.user_id
                 WHERE m.group_id = ?
                 ORDER BY m.start_time DESC";
         $stmt = $this->db->prepare($sql);
@@ -29,15 +29,23 @@ class Meeting {
             ]);
         } catch (PDOException $e) { return false; }
     }
+
+
+    /**
+     * (SỬA LỖI) Đổi JOIN thành LEFT JOIN
+     * Để tránh lỗi khi người tạo bị xóa
+     */
     public function getMeetingById($meeting_id) {
         $sql = "SELECT m.*, u.username AS creator_name
                 FROM meetings m
-                JOIN users u ON m.created_by_user_id = u.user_id
+                LEFT JOIN users u ON m.created_by_user_id = u.user_id
                 WHERE m.meeting_id = ?";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$meeting_id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+    
+    // ... (Giữ nguyên các hàm: updateMinutes, submitRating, getUserRating, getUpcomingMeetings) ...
     public function updateMinutes($meeting_id, $minutes, $action_items) {
         $sql = "UPDATE meetings SET minutes = ?, action_items = ? WHERE meeting_id = ?";
         $stmt = $this->db->prepare($sql);
@@ -45,15 +53,6 @@ class Meeting {
             return $stmt->execute([$minutes, $action_items, $meeting_id]);
         } catch (PDOException $e) { return false; }
     }
-
-    // ===================================================
-    // HÀM MỚI 1: LƯU ĐÁNH GIÁ (1-5 SAO)
-    // ===================================================
-    /**
-     * Dùng ON DUPLICATE KEY UPDATE:
-     * Nếu user chưa đánh giá -> INSERT
-     * Nếu user đã đánh giá rồi -> UPDATE (thay đổi điểm)
-     */
     public function submitRating($meeting_id, $user_id, $rating) {
         $sql = "INSERT INTO meeting_attendance (meeting_id, user_id, satisfaction_rating)
                 VALUES (?, ?, ?)
@@ -66,10 +65,6 @@ class Meeting {
             return false;
         }
     }
-
-    // ===================================================
-    // HÀM MỚI 2: LẤY ĐÁNH GIÁ CỦA USER HIỆN TẠI
-    // ===================================================
     public function getUserRating($meeting_id, $user_id) {
         $sql = "SELECT satisfaction_rating FROM meeting_attendance
                 WHERE meeting_id = ? AND user_id = ?";
@@ -78,7 +73,24 @@ class Meeting {
         $stmt->execute([$meeting_id, $user_id]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        return $result ? $result['satisfaction_rating'] : null; // Trả về điểm (1-5) hoặc null
+        return $result ? $result['satisfaction_rating'] : null;
+    }
+    public function getUpcomingMeetings($user_id, $hours_limit = 12) {
+        $sql = "SELECT m.meeting_id, m.meeting_title, m.start_time, g.group_id, g.group_name
+                FROM meetings m
+                JOIN group_members gm ON m.group_id = gm.group_id
+                JOIN groups g ON m.group_id = g.group_id
+                WHERE gm.user_id = ?
+                AND m.start_time > NOW() 
+                AND m.start_time <= DATE_ADD(NOW(), INTERVAL ? HOUR)
+                ORDER BY m.start_time ASC";
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$user_id, $hours_limit]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return [];
+        }
     }
 }
 ?>

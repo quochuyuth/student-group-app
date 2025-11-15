@@ -1,5 +1,5 @@
 <?php
-// index.php (ĐÃ CẬP NHẬT)
+// index.php (Bản HOÀN CHỈNH - Đã GỠ logic đếm tổng chat)
 
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
@@ -10,12 +10,36 @@ require_once 'config/database.php'; // $db được tạo ở đây
 // (MỚI) LOGIC LẤY THÔNG BÁO TOÀN TRANG
 // ===================================================
 $upcoming_tasks = [];
+$upcoming_meetings = [];
 $notification_count = 0;
+$pending_invitation_count = 0;
+// $unread_chat_count = 0; // (ĐÃ XÓA)
+$total_group_notifications = 0;
+
 if (isset($_SESSION['user_id'])) {
+    $current_user_id_for_header = $_SESSION['user_id'];
+    
+    // 1. Tải Model
     require_once 'app/models/Task.php';
+    require_once 'app/models/Meeting.php';
+    require_once 'app/models/Group.php';
+    require_once 'app/models/Chat.php'; // Vẫn cần ChatModel cho GroupController
+    
+    // 2. Khởi tạo Model
     $taskModelForHeader = new Task($db); 
-    $upcoming_tasks = $taskModelForHeader->getUpcomingDueTasks($_SESSION['user_id'], 3); 
-    $notification_count = count($upcoming_tasks);
+    $meetingModelForHeader = new Meeting($db);
+    $groupModelForHeader = new Group($db);
+    // $chatModelForHeader = new Chat($db); // (ĐÃ XÓA)
+
+    // 3. Lấy dữ liệu cho Chuông (Task + Họp)
+    $upcoming_tasks = $taskModelForHeader->getUpcomingDueTasks($current_user_id_for_header, 3); // 3 ngày
+    $upcoming_meetings = $meetingModelForHeader->getUpcomingMeetings($current_user_id_for_header, 12); // 12 tiếng
+    $notification_count = count($upcoming_tasks) + count($upcoming_meetings);
+
+    // 4. Lấy dữ liệu cho Menu "Các nhóm của tôi" (Chỉ Lời mời)
+    $pending_invitation_count = count($groupModelForHeader->getPendingInvitationsByUserId($current_user_id_for_header));
+    // $unread_chat_count = $chatModelForHeader->getUnreadMessageCount($current_user_id_for_header); // (ĐÃ XÓA)
+    $total_group_notifications = $pending_invitation_count; // (ĐÃ SỬA)
 }
 // ===================================================
 
@@ -82,12 +106,12 @@ if ($action) {
 
         case 'create_meeting': 
         case 'save_minutes': 
-        case 'submit_meeting_rating': // *** (SỬA) ***
+        case 'submit_meeting_rating':
             require_once 'app/controllers/MeetingController.php';
             $meetingController = new MeetingController($db);
             if ($action == 'create_meeting') $meetingController->create();
             if ($action == 'save_minutes') $meetingController->saveMinutes();
-            if ($action == 'submit_meeting_rating') $meetingController->submitRating(); // *** (SỬA) ***
+            if ($action == 'submit_meeting_rating') $meetingController->submitRating();
             break;
             
         case 'send_message': 
@@ -117,35 +141,33 @@ else {
         case 'login': case 'home': default: require 'app/views/auth/login.php'; break;
         
         case 'dashboard':
-            require_once 'app/models/Group.php';
-            require_once 'app/models/Task.php';
-            $groupModel = new Group($db);
-            $taskModel = new Task($db);
-            
+            // (Đã dời logic lấy Model ra ngoài top-level)
+            // (Chỉ cần lấy $pieChartData)
             if (isset($_SESSION['user_id'])) {
                 $user_id = $_SESSION['user_id'];
-                
+                // Lấy dữ liệu cho 4 thẻ (biến đã có sẵn từ top-level)
                 $card1_title = "Tổng số Nhóm";
-                $card1_value = count($groupModel->getGroupsByUserId($user_id));
+                $card1_value = count($groupModelForHeader->getGroupsByUserId($user_id));
                 $card1_icon = "fa-layer-group";
                 $card1_color = "primary";
 
                 $card2_title = "Tổng số Task";
-                $card2_value = $taskModel->getTotalTasksByUserId($user_id); 
+                $card2_value = $taskModelForHeader->getTotalTasksByUserId($user_id); 
                 $card2_icon = "fa-tasks";
                 $card2_color = "success";
 
                 $card3_title = "Task Cần Làm";
-                $card3_value = $taskModel->getPendingTasksByUserId($user_id); 
+                $card3_value = $taskModelForHeader->getPendingTasksByUserId($user_id); 
                 $card3_icon = "fa-clipboard-list";
                 $card3_color = "info";
 
                 $card4_title = "Lời mời chờ";
-                $card4_value = count($groupModel->getPendingInvitationsByUserId($user_id));
+                $card4_value = $pending_invitation_count; // Dùng biến global
                 $card4_icon = "fa-envelope";
                 $card4_color = "warning";
                 
-                $pieChartData = $taskModel->getTaskProgressByUserId($user_id);
+                // Lấy dữ liệu cho biểu đồ tròn
+                $pieChartData = $taskModelForHeader->getTaskProgressByUserId($user_id);
 
             } else {
                 header('Location: index.php?page=login');
@@ -204,14 +226,6 @@ else {
             $meetingController = new MeetingController($db);
             $meetingController->showDetails();
             break;
-        
-        // *** (THÊM MỚI) ***
-        case 'join_meeting':
-            require_once 'app/controllers/MeetingController.php';
-            $meetingController = new MeetingController($db);
-            $meetingController->joinMeeting();
-            break;
-        // *** (HẾT PHẦN MỚI) ***
 
         case 'group_report':
             require_once 'app/controllers/ReportController.php';

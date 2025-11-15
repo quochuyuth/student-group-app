@@ -2,17 +2,17 @@
 // app/controllers/ChatController.php (ĐÃ NÂNG CẤP)
 
 require_once 'app/models/Chat.php';
-require_once 'app/models/Poll.php'; // (MỚI) Cần để lấy Polls
+require_once 'app/models/Poll.php'; 
 
 class ChatController {
     private $db;
     private $chatModel;
-    private $pollModel; // (MỚI)
+    private $pollModel; 
 
     public function __construct($db) {
         $this->db = $db;
         $this->chatModel = new Chat($this->db);
-        $this->pollModel = new Poll($this->db); // (MỚI)
+        $this->pollModel = new Poll($this->db); 
     }
 
     /**
@@ -122,8 +122,7 @@ class ChatController {
     }
 
     /**
-     * *** (HÀM MỚI) ***
-     * Lấy tin nhắn mới cho AJAX Polling
+     * (SỬA ĐỔI) Lấy tin nhắn mới VÀ ĐÁNH DẤU ĐÃ XEM
      */
     public function getNewMessages() {
         header('Content-Type: application/json');
@@ -137,15 +136,15 @@ class ChatController {
         $user_id = $_SESSION['user_id'];
 
         // (Bảo mật: Bạn nên thêm hàm kiểm tra user có trong nhóm không)
-        // $is_member = $this->groupModel->isUserInGroup($group_id, $user_id);
-        // if (!$is_member) {
-        //     echo json_encode(['success' => false, 'message' => 'Không có quyền truy cập']);
-        //     exit;
-        // }
         
         // Lấy tin nhắn mới
         $new_messages = $this->chatModel->getNewMessages($group_id, $last_message_id);
         
+        // (MỚI) Nếu có tin nhắn mới, đánh dấu là đã xem (vì user đang bật chat)
+        if (count($new_messages) > 0) {
+            $this->chatModel->markGroupAsSeen($user_id, $group_id);
+        }
+
         // Lấy reactions và polls cho các tin nhắn mới này
         $message_ids = array_column($new_messages, 'message_id');
         $reactions = $this->chatModel->getReactionsForMessages($message_ids);
@@ -153,7 +152,11 @@ class ChatController {
         $poll_ids = array_filter(array_column($new_messages, 'poll_id'));
         $polls = [];
         if (!empty($poll_ids)) {
-            $polls = $this->pollModel->getPollsByIds($poll_ids); // Cần tạo hàm này trong PollModel
+            $polls_data = $this->pollModel->getPollsByIds($poll_ids); 
+            // Sắp xếp lại poll theo ID để JS dễ tìm
+            foreach($polls_data as $poll) {
+                $polls[$poll['poll_id']] = $poll;
+            }
         }
         
         // Lấy phiếu bầu của user cho các poll này
@@ -171,9 +174,9 @@ class ChatController {
             'success' => true, 
             'messages' => $new_messages,
             'reactions' => $reactions,
-            'polls' => $polls,
+            'polls' => $polls, // Gửi poll đã được sắp xếp
             'user_votes' => $user_votes,
-            'current_user_id' => $user_id // Gửi kèm user_id để JS so sánh
+            'current_user_id' => $user_id 
         ]);
         exit;
     }

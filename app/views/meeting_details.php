@@ -1,15 +1,15 @@
 <?php
-// Tệp: app/views/meeting_details.php (ĐÃ THÊM NÚT VÀO HỌP)
+// Tệp: app/views/meeting_details.php (Bản HOÀN THIỆN với SB Admin 2)
 
 // 1. Gọi Header
 require 'app/views/layout/header.php'; 
 
-// Các biến $meeting, $user_rating và $group đã được MeetingController tải
+// Các biến $meeting và $user_rating đã được MeetingController tải
 ?>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800">Chi tiết cuộc họp</h1>
-    <a href="index.php?page=group_meetings&group_id=<?php echo $meeting['group_id']; ?>" class="btn btn-sm btn-secondary shadow-sm">
+    <a href="index.php?page=group_meetings&group_id=<?php echo $meeting['group_id'] ?? 0; ?>" class="btn btn-sm btn-secondary shadow-sm">
         <i class="fas fa-arrow-left fa-sm text-white-50"></i> Quay lại Danh sách họp
     </a>
 </div>
@@ -21,37 +21,30 @@ require 'app/views/layout/header.php';
     <?php unset($_SESSION['flash_message']); ?>
 <?php endif; ?>
 
-<div class="card bg-success text-white shadow mb-4">
-    <div class="card-body d-flex justify-content-between align-items-center">
-        <div class="text-white">
-            <h5 class="mb-0 text-white">Phòng họp đã sẵn sàng!</h5>
-            <span>Tham gia cuộc họp online ngay bây giờ.</span>
-        </div>
-        <a href="index.php?page=join_meeting&id=<?php echo $meeting['meeting_id']; ?>" class="btn btn-light btn-icon-split" target="_blank">
-            <span class="icon text-gray-600"><i class="fas fa-video"></i></span>
-            <span class="text">Vào phòng họp</span>
-        </a>
-    </div>
-</div>
 <div class="row">
 
     <div class="col-lg-5">
+
         <div class="card shadow mb-4">
             <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary"><?php echo htmlspecialchars($meeting['meeting_title']); ?></h6>
+                <!-- (SỬA LỖI) Thêm ?? '...' -->
+                <h6 class="m-0 font-weight-bold text-primary"><?php echo htmlspecialchars($meeting['meeting_title'] ?? 'Chi tiết cuộc họp'); ?></h6>
             </div>
             <div class="card-body">
                 <p>
                     <strong><i class="fas fa-calendar-alt mr-2"></i>Thời gian:</strong> 
-                    <?php echo date('d/m/Y H:i', strtotime($meeting['start_time'])); ?>
+                    <!-- (SỬA LỖI) Thêm ?? '...' -->
+                    <?php echo date('d/m/Y H:i', strtotime($meeting['start_time'] ?? 'now')); ?>
                 </p>
                 <p>
                     <strong><i class="fas fa-user mr-2"></i>Người tạo:</strong> 
-                    <?php echo htmlspecialchars($meeting['creator_name']); ?>
+                    <!-- (SỬA LỖI) Thêm ?? '...' -->
+                    <?php echo htmlspecialchars($meeting['creator_name'] ?? 'Không rõ'); ?>
                 </p>
                 <hr>
                 <strong><i class="fas fa-list-alt mr-2"></i>Nội dung (Agenda):</strong>
-                <pre class="bg-light p-3 rounded mt-2" style="white-space: pre-wrap; font-family: inherit;"><?php echo htmlspecialchars($meeting['agenda']); ?></pre>
+                <!-- (SỬA LỖI) Thêm ?? '...' -->
+                <pre class="bg-light p-3 rounded mt-2" style="white-space: pre-wrap; font-family: inherit;"><?php echo htmlspecialchars($meeting['agenda'] ?? 'Không có nội dung'); ?></pre>
             </div>
         </div>
 
@@ -75,6 +68,7 @@ require 'app/views/layout/header.php';
                 </form>
             </div>
         </div>
+
     </div>
 
     <div class="col-lg-7">
@@ -88,11 +82,13 @@ require 'app/views/layout/header.php';
                     
                     <div class="form-group">
                         <label for="minutes">Nội dung đã diễn ra:</label>
+                        <!-- (SỬA LỖI) Thêm ?? '' -->
                         <textarea class="form-control" id="minutes" name="minutes" rows="10"><?php echo htmlspecialchars($meeting['minutes'] ?? ''); ?></textarea>
                     </div>
 
                     <div class="form-group">
                         <label for="action_items">Việc cần làm sau họp (Action Items):</label>
+                        <!-- (SỬA LỖI) Thêm ?? '' -->
                         <textarea class="form-control" id="action_items" name="action_items" rows="5"><?php echo htmlspecialchars($meeting['action_items'] ?? ''); ?></textarea>
                     </div>
 

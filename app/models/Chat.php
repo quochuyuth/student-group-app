@@ -8,7 +8,7 @@ class Chat {
         $this->db = $db;
     }
 
-    // --- (Hàm sendMessage, saveFileMessage, sendPollMessage - Giữ nguyên) ---
+    // ... (Giữ nguyên các hàm: sendMessage, saveFileMessage, sendPollMessage, getMessagesByGroupId, getNewMessages, getChatFilesByGroupId, handleReaction, getReactionsForMessages) ...
     public function sendMessage($group_id, $sender_user_id, $message_content, $reply_to_message_id = null) {
         if ($reply_to_message_id) {
             $stmt_check = $this->db->prepare("SELECT message_id FROM messages WHERE message_id = ? AND group_id = ?");
@@ -18,8 +18,8 @@ class Chat {
             }
         }
         $sql = "INSERT INTO messages 
-                     (group_id, sender_user_id, message_content, reply_to_message_id)
-                 VALUES (?, ?, ?, ?)";
+                    (group_id, sender_user_id, message_content, reply_to_message_id)
+                VALUES (?, ?, ?, ?)";
         $stmt = $this->db->prepare($sql);
         try {
             return $stmt->execute([$group_id, $sender_user_id, $message_content, $reply_to_message_id]);
@@ -53,7 +53,7 @@ class Chat {
     }
     public function sendPollMessage($group_id, $user_id, $poll_id) {
         $sql = "INSERT INTO messages (group_id, sender_user_id, poll_id, created_at) 
-                 VALUES (?, ?, ?, NOW())";
+                VALUES (?, ?, ?, NOW())";
         $stmt = $this->db->prepare($sql);
         try {
             return $stmt->execute([$group_id, $user_id, $poll_id]);
@@ -61,10 +61,6 @@ class Chat {
             return false; 
         }
     }
-
-    /**
-     * (SỬA ĐỔI) Chỉ lấy 50 tin nhắn CŨ NHẤT
-     */
     public function getMessagesByGroupId($group_id, $limit = 50) {
         $sql = "SELECT 
                     m.*, 
@@ -91,11 +87,6 @@ class Chat {
         
         return array_reverse($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
-    
-    /**
-     * *** (HÀM MỚI) ***
-     * Lấy các tin nhắn mới hơn 1 ID cụ thể (cho AJAX Polling)
-     */
     public function getNewMessages($group_id, $last_message_id) {
          $sql = "SELECT 
                     m.*, 
@@ -112,15 +103,12 @@ class Chat {
                 LEFT JOIN users replied_user ON replied.sender_user_id = replied_user.user_id 
                 LEFT JOIN files replied_file ON replied.file_id = replied_file.file_id 
                 WHERE m.group_id = ? AND m.message_id > ?
-                ORDER BY m.created_at ASC"; // Lấy theo thứ tự tăng dần
+                ORDER BY m.created_at ASC"; 
         
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$group_id, $last_message_id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
-
-    // (Hàm getChatFilesByGroupId, handleReaction, getReactionsForMessages - Giữ nguyên)
     public function getChatFilesByGroupId($group_id, $filter_user_id = null, $filter_date_from = null, $filter_date_to = null) {
         $sql = "SELECT 
                     f.file_name, f.file_path, f.file_size, f.created_at,
@@ -188,6 +176,44 @@ class Chat {
             $reactions_by_message[$row['message_id']][] = $row;
         }
         return $reactions_by_message;
+    }
+
+    // ===================================================
+    // HÀM MỚI 1: ĐÁNH DẤU NHÓM LÀ "ĐÃ XEM" (GIỮ NGUYÊN)
+    // ===================================================
+    public function markGroupAsSeen($user_id, $group_id) {
+        $sql = "INSERT INTO user_group_last_seen (user_id, group_id, last_seen_timestamp)
+                VALUES (?, ?, NOW())
+                ON DUPLICATE KEY UPDATE last_seen_timestamp = NOW()";
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$user_id, $group_id]);
+            return true;
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    // ===================================================
+    // (HÀM SỬA ĐỔI) ĐẾM TIN NHẮN CHƯA ĐỌC CHO TỪNG NHÓM
+    // ===================================================
+    public function getUnreadCountsByGroup($user_id) {
+        $sql = "SELECT m.group_id, COUNT(DISTINCT m.message_id) as unread_count
+                FROM messages m
+                JOIN group_members gm ON m.group_id = gm.group_id
+                LEFT JOIN user_group_last_seen ugls ON m.group_id = ugls.group_id AND gm.user_id = ugls.user_id
+                WHERE gm.user_id = ?
+                AND m.sender_user_id != ? 
+                AND (ugls.last_seen_timestamp IS NULL OR m.created_at > ugls.last_seen_timestamp)
+                GROUP BY m.group_id"; // Thêm GROUP BY
+        
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$user_id, $user_id]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC); // Trả về danh sách
+        } catch (PDOException $e) {
+            return []; // Trả về mảng rỗng nếu lỗi
+        }
     }
 }
 ?>

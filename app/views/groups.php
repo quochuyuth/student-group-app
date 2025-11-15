@@ -1,10 +1,11 @@
 <?php
-// Tệp: app/views/groups.php (ĐÃ THÊM NÚT CHAT)
+// Tệp: app/views/groups.php (ĐÃ CẬP NHẬT)
 
 // 1. Gọi Header
 require 'app/views/layout/header.php'; 
 
-// Các biến $groups và $invitations đã được GroupController tải
+// Các biến $groups, $invitations, và $unread_counts
+// đã được GroupController->index() tải
 ?>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -95,6 +96,11 @@ require 'app/views/layout/header.php';
                 <?php else: ?>
                     <div class="list-group">
                         <?php foreach ($groups as $group): ?>
+                            <?php
+                            // *** (LOGIC MỚI) ***
+                            // Lấy số tin nhắn chưa đọc cho nhóm này từ mảng $unread_counts
+                            $unread_count = $unread_counts[$group['group_id']] ?? 0;
+                            ?>
                             <div class="list-group-item list-group-item-action flex-column align-items-start">
                                 <div class="d-flex w-100 justify-content-between">
                                     <h5 class="mb-1 text-primary"><?php echo htmlspecialchars($group['group_name']); ?></h5>
@@ -105,12 +111,19 @@ require 'app/views/layout/header.php';
                                 <div class="mt-2 text-right">
                                     <a href="index.php?page=group_chat&id=<?php echo $group['group_id']; ?>" class="btn btn-info btn-sm">
                                         <i class="fas fa-comments"></i> Chat
+                                        
+                                        <!-- *** (HTML MỚI) *** -->
+                                        <!-- Hiển thị số nếu > 0 -->
+                                        <?php if ($unread_count > 0): ?>
+                                            <span class="badge badge-danger ml-1"><?php echo $unread_count; ?></span>
+                                        <?php endif; ?>
                                     </a>
+                                    
                                     <a href="index.php?page=group_details&id=<?php echo $group['group_id']; ?>" class="btn btn-primary btn-sm ml-1">
                                         <i class="fas fa-cog"></i> Chi tiết
                                     </a>
                                 </div>
-                                </div>
+                            </div>
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
