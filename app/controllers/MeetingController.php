@@ -1,5 +1,5 @@
 <?php
-// app/controllers/MeetingController.php
+// app/controllers/MeetingController.php (ĐÃ CẬP NHẬT)
 
 require_once 'app/models/Meeting.php';
 require_once 'app/models/Group.php'; 
@@ -15,12 +15,19 @@ class MeetingController {
         $this->groupModel = new Group($this->db);
     }
 
-    // ... (Giữ nguyên hàm: index, create, saveMinutes) ...
+    // ... (Giữ nguyên hàm: index, create, saveMinutes, showDetails, submitRating) ...
     public function index() {
         if (!isset($_SESSION['user_id'])) {
             header('Location: index.php?page=login'); exit;
         }
         $group_id = (int)$_GET['group_id'];
+        
+        // (SỬA) Thêm kiểm tra bảo mật
+        if (!$this->groupModel->isUserInGroup($group_id, $_SESSION['user_id'])) {
+             $_SESSION['flash_message'] = "Lỗi: Bạn không có quyền truy cập nhóm này.";
+             header('Location: index.php?page=groups'); exit;
+        }
+        
         $group = $this->groupModel->getGroupById($group_id);
         if (!$group) {
             header('Location: index.php?page=groups'); exit;
@@ -33,6 +40,13 @@ class MeetingController {
             header('Location: index.php?page=login'); exit;
         }
         $group_id = (int)$_POST['group_id'];
+        
+        // (SỬA) Thêm kiểm tra bảo mật
+        if (!$this->groupModel->isUserInGroup($group_id, $_SESSION['user_id'])) {
+             $_SESSION['flash_message'] = "Lỗi: Bạn không có quyền thực hiện.";
+             header('Location: index.php?page=groups'); exit;
+        }
+        
         $redirect_url = "Location: index.php?page=group_meetings&group_id=" . $group_id;
         $data = [
             'group_id' => $group_id, 'meeting_title' => strip_tags($_POST['meeting_title']),
@@ -58,6 +72,14 @@ class MeetingController {
         $minutes = strip_tags($_POST['minutes'], '<br><p><ul><ol><li><strong><em>');
         $action_items = strip_tags($_POST['action_items'], '<br><p><ul><ol><li><strong><em>');
         $redirect_url = "Location: index.php?page=meeting_details&id=" . $meeting_id;
+        
+        // (SỬA) Thêm kiểm tra bảo mật
+        $meeting = $this->meetingModel->getMeetingById($meeting_id);
+        if (!$this->groupModel->isUserInGroup($meeting['group_id'], $_SESSION['user_id'])) {
+             $_SESSION['flash_message'] = "Lỗi: Bạn không có quyền thực hiện.";
+             header('Location: index.php?page=groups'); exit;
+        }
+        
         if ($this->meetingModel->updateMinutes($meeting_id, $minutes, $action_items)) {
             $_SESSION['flash_message'] = "Đã lưu biên bản họp!";
         } else {
@@ -65,12 +87,70 @@ class MeetingController {
         }
         header($redirect_url); exit;
     }
+    public function showDetails() {
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: index.php?page=login');
+            exit;
+        }
+        $meeting_id = (int)$_GET['id'];
+        $user_id = $_SESSION['user_id'];
+        
+        $meeting = $this->meetingModel->getMeetingById($meeting_id);
+        if (!$meeting) {
+            $_SESSION['flash_message'] = "Không tìm thấy cuộc họp.";
+            header('Location: index.php?page=groups'); exit;
+        }
+        
+        // (SỬA) Thêm kiểm tra bảo mật
+        if (!$this->groupModel->isUserInGroup($meeting['group_id'], $user_id)) {
+             $_SESSION['flash_message'] = "Lỗi: Bạn không có quyền truy cập.";
+             header('Location: index.php?page=groups'); exit;
+        }
+        
+        $user_rating = $this->meetingModel->getUserRating($meeting_id, $user_id);
+        
+        // Lấy group để quay về
+        $group = $this->groupModel->getGroupById($meeting['group_id']);
+
+        require 'app/views/meeting_details.php';
+    }
+    public function submitRating() {
+        if (!isset($_SESSION['user_id']) || $_SERVER['REQUEST_METHOD'] != 'POST') {
+            header('Location: index.php?page=login');
+            exit;
+        }
+        $meeting_id = (int)$_POST['meeting_id'];
+        $user_id = $_SESSION['user_id'];
+        $rating = (int)$_POST['satisfaction_rating'];
+        
+        $redirect_url = "Location: index.php?page=meeting_details&id=" . $meeting_id;
+
+        // (SỬA) Thêm kiểm tra bảo mật
+        $meeting = $this->meetingModel->getMeetingById($meeting_id);
+        if (!$this->groupModel->isUserInGroup($meeting['group_id'], $user_id)) {
+             $_SESSION['flash_message'] = "Lỗi: Bạn không có quyền thực hiện.";
+             header('Location: index.php?page=groups'); exit;
+        }
+
+        if ($rating < 1 || $rating > 5) {
+            $_SESSION['flash_message'] = "Lỗi: Vui lòng chọn điểm từ 1 đến 5.";
+            header($redirect_url); exit;
+        }
+        if ($this->meetingModel->submitRating($meeting_id, $user_id, $rating)) {
+            $_SESSION['flash_message'] = "Đã lưu đánh giá của bạn!";
+        } else {
+            $_SESSION['flash_message'] = "Lỗi: Không thể lưu đánh giá.";
+        }
+        
+        header($redirect_url);
+        exit;
+    }
 
     /**
-     * CẬP NHẬT HÀM NÀY:
-     * Hiển thị trang chi tiết (thêm logic lấy rating)
+     * *** (HÀM MỚI) ***
+     * Hiển thị phòng họp Jitsi Meet
      */
-    public function showDetails() {
+    public function joinMeeting() {
         if (!isset($_SESSION['user_id'])) {
             header('Location: index.php?page=login');
             exit;
@@ -80,49 +160,23 @@ class MeetingController {
         $user_id = $_SESSION['user_id'];
         
         $meeting = $this->meetingModel->getMeetingById($meeting_id);
-        
-        // LẤY RATING CỦA USER NÀY (MỚI)
-        $user_rating = $this->meetingModel->getUserRating($meeting_id, $user_id);
-        
         if (!$meeting) {
             $_SESSION['flash_message'] = "Không tìm thấy cuộc họp.";
             header('Location: index.php?page=groups');
             exit;
         }
-
-        // Truyền cả $meeting và $user_rating
-        require 'app/views/meeting_details.php';
-    }
-
-    // ===================================================
-    // HÀM MỚI: LƯU ĐÁNH GIÁ 1-5 SAO
-    // ===================================================
-    public function submitRating() {
-        if (!isset($_SESSION['user_id']) || $_SERVER['REQUEST_METHOD'] != 'POST') {
-            header('Location: index.php?page=login');
-            exit;
-        }
-
-        $meeting_id = (int)$_POST['meeting_id'];
-        $user_id = $_SESSION['user_id'];
-        $rating = (int)$_POST['satisfaction_rating'];
         
-        $redirect_url = "Location: index.php?page=meeting_details&id=" . $meeting_id;
-
-        if ($rating < 1 || $rating > 5) {
-            $_SESSION['flash_message'] = "Lỗi: Vui lòng chọn điểm từ 1 đến 5.";
-            header($redirect_url);
-            exit;
+        // Kiểm tra bảo mật
+        if (!$this->groupModel->isUserInGroup($meeting['group_id'], $user_id)) {
+             $_SESSION['flash_message'] = "Lỗi: Bạn không có quyền tham gia cuộc họp này.";
+             header('Location: index.php?page=groups'); exit;
         }
 
-        if ($this->meetingModel->submitRating($meeting_id, $user_id, $rating)) {
-            $_SESSION['flash_message'] = "Đã lưu đánh giá của bạn!";
-        } else {
-            $_SESSION['flash_message'] = "Lỗi: Không thể lưu đánh giá.";
-        }
-        
-        header($redirect_url);
-        exit;
+        // Lấy thông tin nhóm
+        $group = $this->groupModel->getGroupById($meeting['group_id']);
+
+        // Gọi View mới
+        require 'app/views/meeting_room.php';
     }
 }
 ?>

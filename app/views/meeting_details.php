@@ -1,10 +1,10 @@
 <?php
-// Tệp: app/views/meeting_details.php (Bản HOÀN THIỆN với SB Admin 2)
+// Tệp: app/views/meeting_details.php (ĐÃ THÊM NÚT VÀO HỌP)
 
 // 1. Gọi Header
 require 'app/views/layout/header.php'; 
 
-// Các biến $meeting và $user_rating đã được MeetingController tải
+// Các biến $meeting, $user_rating và $group đã được MeetingController tải
 ?>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -21,10 +21,21 @@ require 'app/views/layout/header.php';
     <?php unset($_SESSION['flash_message']); ?>
 <?php endif; ?>
 
+<div class="card bg-success text-white shadow mb-4">
+    <div class="card-body d-flex justify-content-between align-items-center">
+        <div class="text-white">
+            <h5 class="mb-0 text-white">Phòng họp đã sẵn sàng!</h5>
+            <span>Tham gia cuộc họp online ngay bây giờ.</span>
+        </div>
+        <a href="index.php?page=join_meeting&id=<?php echo $meeting['meeting_id']; ?>" class="btn btn-light btn-icon-split" target="_blank">
+            <span class="icon text-gray-600"><i class="fas fa-video"></i></span>
+            <span class="text">Vào phòng họp</span>
+        </a>
+    </div>
+</div>
 <div class="row">
 
     <div class="col-lg-5">
-
         <div class="card shadow mb-4">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary"><?php echo htmlspecialchars($meeting['meeting_title']); ?></h6>
@@ -64,7 +75,6 @@ require 'app/views/layout/header.php';
                 </form>
             </div>
         </div>
-
     </div>
 
     <div class="col-lg-7">

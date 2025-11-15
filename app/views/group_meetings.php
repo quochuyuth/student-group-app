@@ -1,9 +1,8 @@
 <?php
-// Tệp: app/views/group_meetings.php (Bản HOÀN THIỆN với SB Admin 2)
+// Tệp: app/views/group_meetings.php (ĐÃ THÊM NÚT VÀO HỌP)
 
 // 1. Gọi Header
 require 'app/views/layout/header.php'; 
-
 
 // Các biến $group và $meetings đã được MeetingController tải
 ?>
@@ -68,8 +67,7 @@ require 'app/views/layout/header.php';
                 <?php else: ?>
                     <div class="list-group">
                         <?php foreach ($meetings as $meeting): ?>
-                            <a href="index.php?page=meeting_details&id=<?php echo $meeting['meeting_id']; ?>" 
-                               class="list-group-item list-group-item-action flex-column align-items-start mb-2 shadow-sm border-left-info">
+                            <div class="list-group-item list-group-item-action flex-column align-items-start mb-2 shadow-sm border-left-info">
                                 
                                 <div class="d-flex w-100 justify-content-between">
                                     <h5 class="mb-1 text-primary"><?php echo htmlspecialchars($meeting['meeting_title']); ?></h5>
@@ -79,7 +77,16 @@ require 'app/views/layout/header.php';
                                     Nội dung: <?php echo htmlspecialchars(substr($meeting['agenda'], 0, 100)) . '...'; ?>
                                 </p>
                                 <small class="text-muted">Người tạo: <?php echo htmlspecialchars($meeting['creator_name']); ?></small>
-                            </a>
+                                
+                                <div class="mt-2 text-right">
+                                    <a href="index.php?page=join_meeting&id=<?php echo $meeting['meeting_id']; ?>" class="btn btn-success btn-sm" target="_blank">
+                                        <i class="fas fa-video"></i> Vào họp
+                                    </a>
+                                    <a href="index.php?page=meeting_details&id=<?php echo $meeting['meeting_id']; ?>" class="btn btn-primary btn-sm ml-1">
+                                        <i class="fas fa-file-alt"></i> Xem biên bản
+                                    </a>
+                                </div>
+                            </div>
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>

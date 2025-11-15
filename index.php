@@ -1,5 +1,5 @@
 <?php
-// index.php (ĐÃ SỬA LỖI CHUÔNG THÔNG BÁO)
+// index.php (ĐÃ CẬP NHẬT)
 
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
@@ -8,22 +8,15 @@ require_once 'config/database.php'; // $db được tạo ở đây
 
 // ===================================================
 // (MỚI) LOGIC LẤY THÔNG BÁO TOÀN TRANG
-// Chúng ta lấy thông báo ở đây, $db đã có sẵn
 // ===================================================
 $upcoming_tasks = [];
 $notification_count = 0;
-// Chỉ lấy thông báo nếu người dùng đã đăng nhập
 if (isset($_SESSION['user_id'])) {
-    // Tải Task Model
     require_once 'app/models/Task.php';
-    // Khởi tạo model với $db
     $taskModelForHeader = new Task($db); 
-    // Lấy task (hàm này đã có trong model)
     $upcoming_tasks = $taskModelForHeader->getUpcomingDueTasks($_SESSION['user_id'], 3); 
     $notification_count = count($upcoming_tasks);
 }
-// ===================================================
-// (KẾT THÚC LOGIC MỚI)
 // ===================================================
 
 
@@ -31,7 +24,7 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'home';
 $action = isset($_GET['action']) ? $_GET['action'] : null;
 
 if ($action) {
-    // PHẦN ACTION (Không đổi)
+    // PHẦN ACTION
     switch ($action) {
         case 'register': case 'login': case 'logout':
             require_once 'app/controllers/AuthController.php';
@@ -87,12 +80,14 @@ if ($action) {
             if ($action == 'delete_criteria') $rubricController->deleteCriteria();
             break;
 
-        case 'create_meeting': case 'save_minutes': case 'submit_meeting_rating':
+        case 'create_meeting': 
+        case 'save_minutes': 
+        case 'submit_meeting_rating': // *** (SỬA) ***
             require_once 'app/controllers/MeetingController.php';
             $meetingController = new MeetingController($db);
             if ($action == 'create_meeting') $meetingController->create();
             if ($action == 'save_minutes') $meetingController->saveMinutes();
-            if ($action == 'submit_meeting_rating') $meetingController->submitRating();
+            if ($action == 'submit_meeting_rating') $meetingController->submitRating(); // *** (SỬA) ***
             break;
             
         case 'send_message': 
@@ -116,7 +111,7 @@ if ($action) {
     }
 } 
 else {
-    // PHẦN PAGE (Không đổi)
+    // PHẦN PAGE
     switch ($page) {
         case 'register': require 'app/views/auth/register.php'; break;
         case 'login': case 'home': default: require 'app/views/auth/login.php'; break;
@@ -156,7 +151,6 @@ else {
                 header('Location: index.php?page=login');
                 exit;
             }
-
             require 'app/views/dashboard.php'; 
             break;
         
@@ -210,6 +204,14 @@ else {
             $meetingController = new MeetingController($db);
             $meetingController->showDetails();
             break;
+        
+        // *** (THÊM MỚI) ***
+        case 'join_meeting':
+            require_once 'app/controllers/MeetingController.php';
+            $meetingController = new MeetingController($db);
+            $meetingController->joinMeeting();
+            break;
+        // *** (HẾT PHẦN MỚI) ***
 
         case 'group_report':
             require_once 'app/controllers/ReportController.php';
